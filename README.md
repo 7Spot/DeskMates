@@ -15,6 +15,7 @@
 Releases 里的 DMG 是打包好的 app，下载就能用。想从源代码运行，需要自己买到同样的模型，再按下面的步骤导出。
 
 - 边牧：CGTrader 上的 **Cartoon Dog - Border Collie**。
+- 萨摩耶：CGTrader 上的 **Cartoon Dog - Samoyed**。
 - 没有边牧的模型，程序启动不了；萨摩耶、物件的模型缺了，只是那几样不出现。
 
 ## 从源代码运行
