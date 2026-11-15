@@ -22,7 +22,7 @@
 - 开发者设置页（widget/tuning_page.py，连点五下版本号进，‹ 回高级设置）。
 - 「物件」页（widget/things_page.py，从主页面灵动交互选项里的「物件 ›」进，‹ 回主页面）：按组排的格子，点一下摆出来 / 收起来。
 - 卸载确认页（‹ 回高级设置）：没有说明，只有「取消」和红色的「删除」（长按 0.6 秒）；确认后交给独立原生助手：准备成功才退出，App 移入废纸篓后才清理数据。
-- 更新说明页（点「发现新版本」进，‹ 回高级设置）：发布日期 · 大小、Release 正文里的「更新内容」、「下次再说」/「更新」（长按）；更新 = 回到高级设置开始下载。
+- 更新说明页（高级设置或关于页里点「发现新版本」进，‹ 回那一页）：发布日期 · 大小、Release 正文里的「更新内容」、「下次再说」/「更新」（长按）；更新 = 回到那一页开始下载。
 - 已下载页（点「新版本已下载完成」或顶部栏里的新版本胶囊进，取消回原来那页）：app 名 + 版本、「安装包已下载 · 38 MB」、「删除安装包」（长按）/「取消」/「安装」（长按）。
 所有改动直接调窗口的方法，窗口负责记到 QSettings；sync 每 0.3 秒把控件对齐到窗口的状态。"""
 from __future__ import annotations
@@ -186,8 +186,10 @@ class SettingsPanel(Card):
         self.notes_page = self._build_notes()
         self.downloaded_page = self._build_downloaded()
         self._downloaded_from = "main"
+        self._notes_from = "advanced"                               # 更新说明页从哪进的（高级设置 / 关于页的检查更新）：返回、开始下载都回那
         self.add_page = self._build_add()
         self.about_page = AboutPage()                               # 「关于」：主页面左上角圆里的 app 图标点进来
+        self.about_page.status.clicked.connect(lambda _=False: self._update_clicked("about"))
         self.about_hero = AboutHero(self, self.about_page)          # 主页面 ↔ 关于页的过渡动画：圆里的 D、M 变成两根线描出关于页的图（widget/about.py）
         self.pages = {
             "main": Page(self.main_page, self._strip_title, quiet=True, warm=False, lead="mark", title_click="open",
@@ -199,10 +201,10 @@ class SettingsPanel(Card):
                          self.coat_page.on_hide, quiet=True, warm=False, closeup=True),
             "tuning": Page(self.tuning_page, "Developer", "advanced", self.tuning_page.on_show, warm=False),   # 开发者设置
             "uninstall": Page(self.uninstall_page, "Uninstall", "advanced"),
-            "notes": Page(self.notes_page, self._notes_title, "advanced", self._fill_notes),
+            "notes": Page(self.notes_page, self._notes_title, lambda: self._notes_from, self._fill_notes),
             "downloaded": Page(self.downloaded_page, "New version", lambda: self._downloaded_from, self._fill_downloaded, chip=False),
             "add": Page(self.add_page, "Add a deskmate", "main", self._fill_add, warm=False, icon=self._add_icon),
-            "about": Page(self.about_page, "About", "main", name=False),
+            "about": Page(self.about_page, "About", "main", quiet=True, name=False),
         }
         if self.things_page is not None:
             self.pages["things"] = Page(self.things_page, "Things", "main", self.things_page.on_show, warm=False)
@@ -656,20 +658,22 @@ class SettingsPanel(Card):
         self._downloaded_from = came_from
         self.show_page("downloaded")
 
-    def _update_clicked(self) -> None:
+    def _update_clicked(self, came_from: str = "advanced") -> None:
+        """点了「检查更新」那一行（高级设置最底下的、关于页的；came_from 是哪一页）：按现在的状态查、看说明、看下载好的、重下。"""
         state = self.window.updater.state
         if state in ("idle", "offline"):
             self.window.updater.check()
         elif state == "found":
+            self._notes_from = came_from
             self.show_page("notes")
         elif state == "downloaded":
-            self.open_downloaded("advanced")
+            self.open_downloaded(came_from)
         elif state == "failed":
             self.window.updater.download()
 
     def _start_download(self) -> None:
-        """更新说明页长按「更新」：回到高级设置，最底下显示正在下载。"""
-        self.show_page("advanced")
+        """更新说明页长按「更新」：回到点进来的那页（高级设置 / 关于页），检查更新那一行显示正在下载。"""
+        self.show_page(self._notes_from)
         self.window.updater.download()
 
     def _remove_package(self) -> None:
@@ -677,7 +681,7 @@ class SettingsPanel(Card):
         self.show_page(self._downloaded_from)
 
     def sync_update(self) -> None:
-        """「检查更新」这一行、顶部栏的新版本胶囊跟着 updater 的状态变。"""
+        """「检查更新」（高级设置最底下、关于页版本号右边，两处一样）、顶部栏的新版本胶囊跟着 updater 的状态变。"""
         if ui_frozen():
             self._update_pending = True
             return
@@ -688,14 +692,14 @@ class SettingsPanel(Card):
             text = UPDATE_ERRORS.get(up.error_reason, text)
         text = tr(text, pct=round(up.progress * 100)) if "{pct}" in text else tr(text)
 
-        self.update_button.set_status(text, clickable, "blue" if blue else None,
-                                      animated=self._update_state not in (None, up.state))
+        for status in (self.update_button, self.about_page.status):
+            status.set_status(text, clickable, "blue" if blue else None, animated=self._update_state not in (None, up.state))
         self._update_state = up.state
         prompt = getattr(self.window, "update_prompt", None)
         chip = up.state == "downloaded" and self.pages[self.page].chip and not (prompt is not None and prompt.isVisible())
         self._tag.set_chip(i18n.says("New version downloaded") if chip else "")   # 新版本下载好了（狗旁边那张提示收起来以后）：顶部栏里名字右边、× 左边，每一页都有；几种说法按地方挑
         if self.page in ("notes", "downloaded") and (up.release is None or (self.page == "downloaded" and up.state != "downloaded")):
-            self.show_page("advanced" if self.page == "notes" else self._downloaded_from)   # 安装包被删了 / 说明作废了：退回去
+            self.show_page(self._notes_from if self.page == "notes" else self._downloaded_from)   # 安装包被删了 / 说明作废了：退回去
 
     def _lead_click(self, page: str) -> None:
         """点顶部栏左边的圆。进出关于页的动画走着的时候，点一下就掉头（狂点每一下都要有反应）：进的路上点 → 回主页面，
@@ -933,7 +937,7 @@ class SettingsPanel(Card):
             self.about_hero.go(page == "about")                 # 排好版再开始：图落在哪、字在哪都量得准；回：接着倒着走
 
     def _fit_bottom(self) -> None:
-        """底边距：主页面、高级设置、自定义毛色最底下是灰字行，用 PAD_QUIET；最底下是胶囊按钮的页用 PAD（和两边一样）。
+        """底边距：主页面、高级设置、自定义毛色、关于页最底下是灰字行，用 PAD_QUIET；最底下是胶囊按钮的页用 PAD（和两边一样）。
         上边距：主页面、详情页上「我的同桌」那一条紧贴顶部栏，不再空 10。"""
         m = self.body.contentsMargins()
         bottom = PAD_QUIET if self.pages[self.page].quiet else PAD

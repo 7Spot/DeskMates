@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest import mock
 
 import config
+from PySide6.QtCore import QPoint
 from tests.panel_base import PanelCase
 from widget import updater
 from widget.updater import Updater, failure_reason, parse_notes, pick_release
@@ -539,3 +540,10 @@ class SettingsWithoutReleaseRepoTests(PanelCase):
         self.assertFalse(s.update_button.isVisibleTo(s), "没有发布仓库：不显示「检查更新」")
         s._update_clicked()
         self.assertEqual(self.win.updater.state, "idle", "就算点到也不联网")
+        s.show_page("about", animated=False)
+        self.app.processEvents()
+        page = s.about_page
+        self.assertFalse(page.status.isVisibleTo(s), "关于页也只有版本号")
+        self.assertFalse(page.version_row.dot.isVisibleTo(s))
+        center = page.version.mapTo(page, QPoint(page.version.width() // 2, 0)).x()
+        self.assertAlmostEqual(center, page.width() / 2, delta=2, msg="只有版本号时放在正中")

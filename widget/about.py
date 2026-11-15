@@ -1,12 +1,13 @@
 """「关于」页（设置主页面左上角圆里的 app 图标点进来）：一张无框的图（widget/about_art.py：猫狗站在水和沙滩交界的地方，
-左边水里鸭子和鱼、右边沙滩上卡皮巴拉和乌龟、天上海鸥）、名字（中文「同桌 DeskMates」，英文只有 DeskMates）、版本（发布版不带构建号，
-updater.version_text）、一句「养些住在你桌面上的小动物」、两个描边小胶囊链接「访问 GitHub 仓库」（这个软件的仓库）和「访问我的网站」
-（个人网站；英文 Visit GitHub Repo / Visit My Site；网址在 config.GITHUB_URL / HOMEPAGE_URL，空着时先占位、点了没反应）、最底下一行灰字的版权和许可证（COPYRIGHT）。顶部栏没有名字胶囊，只有 ‹ 和 ×（Page.name）。
+左边水里鸭子和鱼、右边沙滩上卡皮巴拉和乌龟、天上海鸥）、名字（中文「同桌 DeskMates」，英文只有 DeskMates）、紧跟着一句「养些住在你桌面上的小动物」、一行灰字「版本 0.9.0 · 检查更新」
+（发布版不带构建号，updater.version_text；检查更新和高级设置最底下那个一样，_VersionRow）、两个描边小胶囊链接「访问 GitHub 仓库」（这个软件的仓库）
+和「访问我的网站」（个人网站；英文 Visit GitHub Repo / Visit My Site；网址在 config.GITHUB_URL / HOMEPAGE_URL，空着时先占位、点了没反应）、
+最底下一行灰字的版权和许可证（COPYRIGHT）。顶部栏没有名字胶囊，只有 ‹ 和 ×（Page.name）。
 
 进来、回去的过渡动画（Hero）：
 - 进：左上角的圆底边先打开一个口；圆里实心的 D、M 先往中间挤窄、往下拉长，越拉越细成两根线，从口里出去（不从圈上穿过去），线全出去了口再合上、
   圆里淡出返回键。两根线往下走到猫狗那一层再低一点，大圆弧拐弯，直接往上从下面钻进去把猫狗的轮廓描出来（里圈那根描 D，外圈那根绕到右边描 M），
-  描完一个填黑一个，填的时候吞一下再舒展；然后地面从猫狗脚下往两头长，动物和下面的字同时从模糊里出来（动物的动作见 about_art）。
+  描完一个填黑一个，填的时候吞一下再舒展；D 快描完时（M 还在描）地面就从猫狗脚下往两头长，动物和下面的字同时从模糊里出来（动物的动作见 about_art）。
 - 回：倒着走（同一个进度钟往回拨）：字、动物、地面一起很快收掉，猫狗的黑退成轮廓，两根线按走过的长度匀着往回收、顺大圆弧回到圆里，
   圆底开口、线钻进去变回粗粗的 D、M，口合上。
 - 任何时候点返回 / 再点进来（回到一半、还没真的换回主页面也算）：只把进度钟的速度平滑地掉头（约 0.06 秒），每样东西都是钟的函数，
@@ -29,6 +30,7 @@ from widget import about_art, marks, sticker, updater
 from widget.about_art import clamp, lerp, smooth, span
 from widget.card import _Flow, _blurred, picture
 from widget.i18n import tr
+from widget.updatestatus import UpdateStatus
 from widget.widgets import MotionButton, draw_icon
 
 INTRO = "Keep a few little animals that live on your desktop"    # 说明文字不带句号
@@ -38,12 +40,13 @@ COPYRIGHT = "Copyright © 2026 JUN7 · GPL v3"     # 中英文一样、不翻译
 
 # ---- 进来那段的节奏（秒，从点下去算；回去是同一个钟往回拨） ----
 T0 = 0.14                         # 两根线开始往下拉
-T1 = {"D": 1.47, "M": 1.62}       # 描完 D、描完 M（各自填黑）
-TF = max(T1.values())             # 猫狗都画完：地面、动物、字从这开始
+T1 = {"D": 1.38, "M": 1.53}       # 描完 D、描完 M（各自填黑）
+TL = max(T1.values())             # 两根线都描完
+TF = 1.36                         # 地面、动物、字从这开始：D 快描完、M 还在描，和描线叠着
 LMAX = 110.0                      # 线在路上多长
 # 线头怎么走：一开始拉长（越拉越细），中间顺，描轮廓时慢下来。
 # 线变细、尾巴渐细、HOME_AT 照线头走到哪跟着挪
-TRAVEL = about_art.bez(0.42, 0.0, 0.3, 1.0)
+TRAVEL = about_art.bez(0.42, 0.0, 0.42, 1.0)
 TEXT_AT, TEXT_STEP, TEXT_S = 0.06, 0.04, 0.6  # 字：猫狗画完以后多久开始（和动物同时）、一行比上一行晚多少、多久从模糊里出完
 END = TF + about_art.Scene.END + 0.05
 SWITCH_S = 0.06                   # 钟的速度掉头要多久（时间常数）
@@ -119,6 +122,67 @@ class _Link(MotionButton):
             super().paintEvent(event)
 
 
+class _Status(UpdateStatus):
+    """关于页的「检查更新」：字和悬停的胶囊贴左（左边是版本号，换字时版本号不挪）；过渡动画画着它的时候自己不画（veiled）。
+    字、能不能点、蓝不蓝和高级设置最底下那个一起由 settings.sync_update 改，点了走 settings._update_clicked("about")。"""
+    ALIGN = Qt.AlignLeft
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.veiled = False
+
+    def paintEvent(self, event) -> None:
+        if not self.veiled:
+            super().paintEvent(event)
+
+
+class _VersionRow(QWidget):
+    """「版本 0.9.0 · 检查更新」：从正中分开，左半边贴右放版本号和「·」，右半边是检查更新，状态换字时左边不挪。
+    没填发布仓库（config.UPDATE_REPO）时只有版本号，放在正中。过渡动画把它当一行字拍（text 是拍下来那张的缓存键）。"""
+
+    def __init__(self, version: str):
+        super().__init__()
+        self.version = _Line(version)
+        self.dot = _Line("·")
+        self.status = _Status()
+        for w in (self.version, self.dot, self.status):
+            w.setParent(self)
+        for label in (self.version, self.dot):
+            label.setProperty("muted", True)
+        self.dot.setContentsMargins(UpdateStatus.TEXT_INSET - 2, 0, 0, 0)   # 「·」两边一样宽：右边那截是检查更新的内边距
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        if updater.enabled():
+            left = QHBoxLayout()
+            left.setSpacing(0)
+            left.addStretch(1)
+            left.addWidget(self.version)
+            left.addWidget(self.dot)
+            lay.addLayout(left, 1)
+            lay.addWidget(self.status, 1)
+        else:
+            self.dot.hide()
+            self.status.hide()
+            lay.addStretch(1)
+            lay.addWidget(self.version)
+            lay.addStretch(1)
+
+    def text(self) -> str:
+        return f"{self.version.text()} · {self.status.text()}"
+
+    @property
+    def veiled(self) -> bool:
+        return self.version.veiled
+
+    @veiled.setter
+    def veiled(self, on: bool) -> None:
+        for w in (self.version, self.dot, self.status):
+            if w.veiled != on:
+                w.veiled = on
+                w.update()
+
+
 class AboutPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -130,19 +194,20 @@ class AboutPage(QWidget):
         name = tr("DeskMates")
         self.name = _Line(name if name == config.APP_NAME else f"{name} {config.APP_NAME}")   # 中文：同桌 DeskMates
         self.name.setStyleSheet("font-weight: 700; font-size: 15px;")
-        self.version = _Line(f"{tr('Version')} {updater.version_text(config.VERSION, config.BUILD)}")
-        self.version.setProperty("muted", True)
         self.intro = _Line(tr(INTRO))
-        for label in (self.name, self.version, self.intro):
+        for label in (self.name, self.intro):
             label.setAlignment(Qt.AlignHCenter)
         self.intro.setWordWrap(True)
         self.intro.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
+        self.version_row = _VersionRow(f"{tr('Version')} {updater.version_text(config.VERSION, config.BUILD)}")
+        self.version, self.status = self.version_row.version, self.version_row.status
+        # 间距：名字、一句话、版本号是一组，挨着排（名字下面 4）；检查更新上下各有约 7 像素悬停胶囊的留白，所以版本号那一行上面不加、
+        # 下面只加 6，看着三行之间差不多，和下面两个链接隔开的和链接到版权的差不多
         lay.addSpacing(8)
         lay.addWidget(self.name)
-        lay.addSpacing(2)
-        lay.addWidget(self.version)
-        lay.addSpacing(12)
+        lay.addSpacing(4)
         lay.addWidget(self.intro)
+        lay.addWidget(self.version_row)
         self.links = tuple(_Link(tr(text), key) for text, key in LINKS)
         row = QHBoxLayout()
         row.setSpacing(10)
@@ -150,17 +215,18 @@ class AboutPage(QWidget):
         for link in self.links:
             row.addWidget(link)
         row.addStretch(1)
-        lay.addSpacing(12)
+        lay.addSpacing(6)
         lay.addLayout(row)
         self.copyright = _Line(COPYRIGHT)
         self.copyright.setProperty("muted", True)
         self.copyright.setAlignment(Qt.AlignHCenter)
-        lay.addSpacing(12)
+        lay.addSpacing(6)                                          # 版权上面空约 11（真样式量的：这 6 加胶囊底下的留白）
         lay.addWidget(self.copyright)
+        lay.addSpacing(3)                                          # 下面灰字行的底边距（Page.quiet）再多 3，约 13.5：底边的描边比胶囊的重，一样空看着挤
 
     @property
     def lines(self) -> tuple:
-        return (self.name, self.version, self.intro, *self.links, self.copyright)
+        return (self.name, self.intro, self.version_row, *self.links, self.copyright)
 
     @property
     def veiled(self) -> bool:
@@ -475,7 +541,7 @@ class Hero:
     # ---- 钟 ----
     def _back_speed(self, p: float) -> float:
         """回去时钟往回拨多快：字、动物、地面那段快；线那段按线头的长度匀着收（描轮廓那截进来时慢，倒着就快），快回到圆时慢下来；最后圆里那段慢慢来。"""
-        if p > TF + 0.02:
+        if p > TL + 0.02:
             return BACK_WORLD
         if p > T0 + 0.02 and self.tracks:
             fwd = max(tr.speed(p) for tr in self.tracks)

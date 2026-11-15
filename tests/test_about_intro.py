@@ -98,8 +98,9 @@ class AboutTests(PanelCase):
         return n
 
     def test_about_page_has_one_line_two_links_and_no_name_chip(self):
-        """底下只要一句「养些住在你桌面上的小动物」，再下面两个描边小胶囊链接（这个软件的仓库、网站：「访问 GitHub 仓库」「访问我的网站」，
-        英文 Visit GitHub Repo / Visit My Site），两种语言都并排放得下：不被挤窄、这一页不比主页面宽；最底下一行版权；顶部栏没有「关于」两个字，只有 ‹ 和 ×。"""
+        """名字下面紧跟一句「养些住在你桌面上的小动物」，再下面一行「版本 0.9.0 · 检查更新」，再下面两个描边小胶囊链接（这个软件的仓库、网站：
+        「访问 GitHub 仓库」「访问我的网站」，英文 Visit GitHub Repo / Visit My Site），两种语言都并排放得下：不被挤窄、这一页不比主页面宽；
+        最底下一行版权；顶部栏没有「关于」两个字，只有 ‹ 和 ×。"""
         from widget import i18n
         self.assertEqual((i18n.ZH["Visit GitHub Repo"], i18n.ZH["Visit My Site"]), ("访问 GitHub 仓库", "访问我的网站"))
         s, bar = self.settings, self.settings._tag
@@ -116,6 +117,21 @@ class AboutTests(PanelCase):
         self.assertTrue(page.rect().contains(page.copyright.geometry()))
         self.assertGreater(page.copyright.y(), page.links[0].geometry().bottom(), "在两个链接下面")
         self.assertIn(page.copyright, page.lines, "进出关于页时跟别的字一起出来")
+        y = lambda w: w.mapTo(page, QPoint(0, 0)).y()
+        row = page.version_row
+        self.assertLess(y(page.name), y(page.intro), "一句话紧跟在名字下面")
+        self.assertLess(y(page.intro) + page.intro.height(), y(row) + 1, "版本号那一行在一句话下面")
+        self.assertLess(y(row) + row.height(), y(page.links[0]) + 1, "…在两个链接上面")
+        self.assertEqual(page.lines, (page.name, page.intro, row, *page.links, page.copyright), "过渡动画里从上往下一行行出来")
+        self.assertEqual(page.status.text(), about.tr("Check for updates"))
+        dot_right = row.dot.mapTo(page, QPoint(row.dot.width(), 0)).x()
+        self.assertAlmostEqual(dot_right, page.width() / 2, delta=2, msg="从正中分开：版本号和「·」在左半边，检查更新在右半边")
+        self.assertLessEqual(page.status.capsule_rect().left(), 3, "检查更新的字和悬停的胶囊贴左（换字时版本号不挪）")
+        from PySide6.QtGui import QFontMetricsF
+        from widget.motion import MOTION_PAD
+        st = page.status
+        hug = QFontMetricsF(st.font()).horizontalAdvance(st.text()) + 2 * (st.TEXT_INSET - MOTION_PAD)
+        self.assertAlmostEqual(st.capsule_rect().width(), hug, delta=2, msg="胶囊只包着字，不是撑满右半边")
         self.assertFalse(page.links[0].property("quiet"))
         self.assertFalse(bar.name_shown)
         self.assertEqual(bar._name_vis, 0.0)
@@ -123,6 +139,42 @@ class AboutTests(PanelCase):
         s.show_page("main", animated=False)
         self.assertTrue(bar.name_shown)
         self.assertEqual(bar._name_vis, 1.0)
+
+    def test_check_for_updates_here_is_the_same_as_in_advanced_settings(self):
+        """关于页的「检查更新」和高级设置最底下那个是同一个状态（一起换字、一起变蓝）；在关于页点「发现新版本」进更新说明页，
+        返回、长按「更新」开始下载都回到关于页。"""
+        from tests.test_updater import rel
+        s, up = self.settings, self.win.updater
+        up._fetch = lambda url: [rel("v99.0.0", pre=False, body="**更新内容**\n- 新东西")]
+        up._spawn = lambda fn: fn()
+        s.show()
+        s.show_page("about", animated=False)
+        s.finish_page_anim()
+        status = s.about_page.status
+        status.click()
+        self.app.processEvents()
+        self.assertEqual(up.state, "found")
+        self.assertEqual((status.text(), status.clickable, status.property("tone")),
+                         (s.update_button.text(), True, "blue"), "和高级设置那个一样：发现新版本，蓝字，能点")
+        status.click()
+        s.finish_page_anim()
+        self.assertEqual(s.page, "notes")
+        self.assertEqual(s.pages["notes"].back_target(), "about", "从关于页进来的，返回回关于页")
+        s.back.click()
+        s.finish_page_anim()
+        self.assertEqual(s.page, "about")
+        status.click()
+        s.finish_page_anim()
+        with mock.patch.object(up, "download") as download:
+            s._start_download()
+        s.finish_page_anim()
+        download.assert_called_once()
+        self.assertEqual(s.page, "about", "长按「更新」：回关于页，在这一行看下载进度")
+        s.show_advanced(True, animated=False)
+        s.finish_page_anim()
+        s._update_clicked()
+        s.finish_page_anim()
+        self.assertEqual(s.pages["notes"].back_target(), "advanced", "从高级设置进的还回高级设置")
 
     def test_entering_draws_the_scene_and_hands_over_pixel_for_pixel(self):
         """进：走完交还给关于页自己画（图是同一段代码 about_art.Scene，字是拍下来的那张），和最后一帧看不出差别。"""

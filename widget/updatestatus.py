@@ -14,7 +14,7 @@ from widget.motion import ButtonMotion, MOTION_PAD
 
 
 class _StatusMotion(ButtonMotion):
-    """状态区域占满行，只有靠右的文字胶囊参与通用按钮动效。"""
+    """状态区域占满行，只有贴着 ALIGN 那边的文字胶囊参与通用按钮动效。"""
     def content_rect(self) -> QRectF:
         return self.widget.capsule_rect()
 
@@ -68,6 +68,7 @@ class UpdateStatus(MotionButton):
     MOTION_CLASS = _StatusMotion
     FADE_HALF = 0.12
     TEXT_INSET = 10
+    ALIGN = Qt.AlignRight      # 字和胶囊贴哪边：高级设置那一行贴右；关于页的贴左（版本号在它左边，换字时版本号不挪）
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -82,6 +83,9 @@ class UpdateStatus(MotionButton):
         self.setStyleSheet("QPushButton { font-size: 12px; font-weight: 400; }")
         self.setAttribute(Qt.WA_MacShowFocusRect, False)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        # 排版按控件自己的大小：macOS 的样式给按钮留了原生按钮的外边距，布局按它排会把同一行的灰字（版本号）往上挤 2 像素，
+        # 字一高一低（真字体量的：字的中线 13 对 15）；这里的底板、字都是自己画的，用不着那圈外边距
+        self.setAttribute(Qt.WA_LayoutUsesWidgetRect)
         self.setCursor(Qt.ArrowCursor)
 
     @property
@@ -109,7 +113,10 @@ class UpdateStatus(MotionButton):
         rect = QRectF(self.rect()).adjusted(MOTION_PAD, MOTION_PAD, -MOTION_PAD, -MOTION_PAD)
         text_width = QFontMetricsF(self.font()).horizontalAdvance(self._visible_text())
         width = min(rect.width(), max(rect.height(), math.ceil(text_width) + 2 * (self.TEXT_INSET - MOTION_PAD)))
-        rect.setLeft(rect.right() - width)
+        if self.ALIGN == Qt.AlignLeft:
+            rect.setRight(rect.left() + width)
+        else:
+            rect.setLeft(rect.right() - width)
         return rect
 
     def set_status(self, text: str, clickable: bool, tone: str | None = None, animated: bool = True) -> None:
@@ -167,9 +174,9 @@ class UpdateStatus(MotionButton):
         painter.setOpacity(painter.opacity() * self._text_opacity)
         painter.setFont(self.font())
         painter.setPen(foreground)
-        # 整行和QLabel使用相同的垂直排字；状态文案始终贴齐右边，宽度变化不挪布局。
+        # 整行和QLabel使用相同的垂直排字；状态文案贴齐 ALIGN 那边，宽度变化不挪布局。
         # 长提示保留两端：原因与末尾的“重试”都能看到；完整语义仍由text()提供。
-        painter.drawText(self._text_rect(), Qt.AlignRight | Qt.AlignVCenter, self._visible_text())
+        painter.drawText(self._text_rect(), self.ALIGN | Qt.AlignVCenter, self._visible_text())
         painter.restore()
 
     def surface_colors(self):
