@@ -1,0 +1,54 @@
+{
+  "id": "samoyed",
+  "kind": "pet",
+  "species": "dog",
+  "icon": "bone",
+  "name": {"en": "Samoyed", "zh": "萨摩耶"},
+  "default_name": "Mochi",
+  "model": "models/samoyed.glb",
+  "coat_dir": "models/texture",
+  "coats": ["Cartoon_Samoyed_Albedo1.png", "Cartoon_Samoyed_Albedo2.png", "Cartoon_Samoyed_Albedo3.png", "Cartoon_Samoyed_Albedo4.png"],
+  "coat_notes": [
+    {"name": {"en": "Snow", "zh": "雪白"}, "pattern": {"en": "All white · faint grey-green back", "zh": "通体白 · 背上一层淡灰绿"}},
+    {"name": {"en": "Cream", "zh": "奶油"}, "pattern": {"en": "Beige muzzle and chest · cool paws", "zh": "米色口鼻和胸口 · 冷白的爪"}},
+    {"name": {"en": "Biscuit", "zh": "饼干"}, "pattern": {"en": "Biscuit saddle · lilac-grey coat", "zh": "背上一片饼干色 · 身子偏灰紫"}},
+    {"name": {"en": "Ice", "zh": "冰蓝"}, "pattern": {"en": "Cool blue-white all over", "zh": "通体偏冷的蓝白"}}
+  ],
+  "custom_coat": true,
+  "coat_custom": {
+    "mode": "tint",
+    "patch_from": 3,
+    "default": {"main": "#FFFFFF", "secondary": "#DDBB8C", "pattern": 1},
+    "patterns": [
+      {"name": {"en": "Solid", "zh": "纯色"}, "note": {"en": "One colour all over", "zh": "通身一个颜色"}},
+      {"name": {"en": "Saddle", "zh": "背上一片"}, "note": {"en": "Secondary colour on the back", "zh": "背上一片副色"}}
+    ],
+    "common_colors": [["#FFFFFF", "#DDBB8C"], ["#F4E4C6", "#B98B5E"], ["#E6CBA2", "#B98B5E"], ["#DDBB8C", "#9C7048"], ["#C5C9D2", "#8E929C"]]
+  },
+  "brightness": 1.4,
+  "thumb": "thumb.png",
+  "height_m": 0.86,
+  "fit_m": 0.92,
+  "mass_kg": 23,
+  "mouth_offset": [0, 0.126, -0.036],
+  "head_shot": {"clip": "Sitting_loop_1", "tall_m": 0.36, "at": 0.45},
+  "jumps": {"hop": {"arc": [0.24, 0.55]}},
+  "gaits": {"walk": 0.7, "trot": 2.1, "run": 3.42, "fast": 4.83, "back": 0.7},
+  "clips": {},
+  "bones": {},
+  "sounds": {
+    "bark": {"files": ["sounds/bark-1.wav", "sounds/bark-2.wav", "sounds/bark-3.wav"]},
+    "lick": {"files": ["sounds/lick-a.wav", "sounds/lick-b.wav", "sounds/lick-c.wav"]},
+    "eat": {"files": ["sounds/eat-loop.wav"]},
+    "bite": {"files": ["sounds/bite-1.wav", "sounds/bite-2.wav", "sounds/bite-3.wav", "sounds/bite-4.wav"], "volume": "eat"},
+    "drop": {"files": ["sounds/drop.wav"], "min_gap": 0.08}
+  },
+  "clip_sounds": {
+    "Bark": {"sound": "bark", "at": [0.495, 1.085, 1.625, 3.075, 3.705]},
+    "Eat_loop": {"sound": "eat", "hold": true, "fade_in": 0.4, "fade_out": 0.5},
+    "EatDrink_end": {"sound": "bite", "at": [0.2]},
+    "Drink_loop": {"sound": "lick", "every": 1.2, "fade_in": 0.08}
+  },
+  "action_sounds": {},
+  "tuning": {"energy": 0.5, "smarts": 0.4, "look_idle_s": 7.0}
+}

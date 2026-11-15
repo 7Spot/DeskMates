@@ -1,0 +1,27 @@
+{
+  "id": "big_ball",
+  "kind": "prop",
+  "name": {"en": "Big ball", "zh": "大球"},
+  "mass_kg": 0.25,
+  "thing": {
+    "group": "toys",
+    "order": 30,
+    "role": "push",
+    "radius": 0.123,
+    "scale": 1.25,
+    "yaw": 0,
+    "shadow": false,
+    "styles": [
+      {"id": "blue_stripes", "name": {"en": "Blue stripes", "zh": "蓝条纹球"}, "model": "models/props/big_ball_1.glb"},
+      {"id": "yellow_stripes", "name": {"en": "Gold stripes", "zh": "黄条纹球"}, "model": "models/props/big_ball_2.glb"},
+      {"id": "green", "name": {"en": "Green ball", "zh": "绿球"}, "model": "models/props/big_ball_3.glb"},
+      {"id": "pink", "name": {"en": "Pink ball", "zh": "粉球"}, "model": "models/props/big_ball_4.glb"}
+    ]
+  },
+  "sounds": {
+    "bounce": {"files": ["sounds/bounce.wav"], "min_gap": 0.06},
+    "grab": {"files": ["sounds/grab.wav"], "min_gap": 0.08},
+    "charge": {"files": ["sounds/bounce.wav"], "volume": "bounce"}
+  },
+  "tuning": {"e_floor": 0.7, "e_wall": 0.75, "roll": 1.5}
+}

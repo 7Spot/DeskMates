@@ -1,0 +1,26 @@
+{
+  "id": "bed",
+  "kind": "prop",
+  "name": {"en": "Bed", "zh": "狗窝"},
+  "mass_kg": 2.0,
+  "thing": {
+    "group": "rest",
+    "order": 10,
+    "role": "bed",
+    "scale": 1.6,
+    "fit_pet": true,
+    "yaw": 0,
+    "shadow": true,
+    "physics": {"mass_kg": 2.0, "bounce": 0.04, "friction": 9.0, "squash": 0.3, "recover": 0.45, "dust": 0.0, "shake": 0.0, "sound": "sounds/land.wav", "volume": 0.7},
+    "rest": {"x": 0.0, "rise": 0.075, "side": 0, "half": 0.28},
+    "front_z": 0.14,
+    "styles": [
+      {"id": "blue", "name": {"en": "Blue bed", "zh": "蓝垫子"}, "model": "models/props/bed_1.glb"},
+      {"id": "grey", "name": {"en": "Grey bed", "zh": "灰垫子"}, "model": "models/props/bed_1b.glb"},
+      {"id": "paws", "name": {"en": "Paw nest", "zh": "爪印圆窝"}, "model": "models/props/bed_2b.glb", "rest": {"x": 0.0, "rise": 0.06, "side": 0, "half": 0.25}, "front_z": 0.12},
+      {"id": "orange", "name": {"en": "Orange nest", "zh": "橙色圆窝"}, "model": "models/props/bed_2.glb", "rest": {"x": 0.0, "rise": 0.06, "side": 0, "half": 0.25}, "front_z": 0.12}
+    ]
+  },
+  "sounds": {},
+  "tuning": {}
+}

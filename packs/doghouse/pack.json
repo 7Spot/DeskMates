@@ -1,0 +1,21 @@
+{
+  "id": "doghouse",
+  "kind": "prop",
+  "name": {"en": "Doghouse", "zh": "狗屋"},
+  "mass_kg": 12.0,
+  "thing": {
+    "group": "rest",
+    "order": 20,
+    "role": "house",
+    "scale": 1.3,
+    "yaw": 0,
+    "shadow": true,
+    "physics": {"mass_kg": 12.0, "bounce": 0.0, "friction": 30.0, "squash": 0.05, "recover": 0.7, "dust": 1.0, "shake": 1.0, "sound": "sounds/land.wav", "volume": 0.85},
+    "styles": [
+      {"id": "gable", "name": {"en": "Gable house", "zh": "尖顶狗屋"}, "model": "models/props/house_1.glb", "yaw": 35, "mirror": true, "rest": {"x": 0.0, "rise": 0.0, "side": 1}},
+      {"id": "flat", "name": {"en": "Flat house", "zh": "平顶狗屋"}, "model": "models/props/house_2.glb", "rest": {"x": 0.25, "rise": 0.0, "side": 0}, "platform": {"y": 0.655, "x0": -0.58, "x1": 0.58, "thick": 0.69}}
+    ]
+  },
+  "sounds": {},
+  "tuning": {}
+}

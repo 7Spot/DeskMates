@@ -1,0 +1,20 @@
+{
+  "id": "seesaw",
+  "kind": "prop",
+  "name": {"en": "Seesaw", "zh": "跷跷板"},
+  "mass_kg": 15.0,
+  "thing": {
+    "group": "park",
+    "order": 30,
+    "role": "decor",
+    "scale": 1.0,
+    "yaw": 90,
+    "shadow": true,
+    "platform": {"y": 0.6, "x0": -1.33, "x1": 1.33, "thick": 0.1},
+    "styles": [
+      {"id": "seesaw", "name": {"en": "Seesaw", "zh": "跷跷板"}, "model": "models/props/seesaw.glb"}
+    ]
+  },
+  "sounds": {},
+  "tuning": {}
+}

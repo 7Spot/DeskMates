@@ -1,0 +1,28 @@
+{
+  "id": "ball",
+  "kind": "prop",
+  "name": {"en": "Ball", "zh": "球"},
+  "mass_kg": 0.06,
+  "thing": {
+    "group": "toys",
+    "order": 10,
+    "role": "fetch",
+    "carry": "ball",
+    "radius": 0.045,
+    "scale": 1.43,
+    "yaw": 0,
+    "shadow": false,
+    "styles": [
+      {"id": "red", "name": {"en": "Ball", "zh": "小球"}, "draw": "ball", "scale": 1.0},
+      {"id": "tennis_blue", "name": {"en": "Blue tennis", "zh": "蓝网球"}, "model": "models/props/ball_1.glb", "tint": [0.27, 0.42, 0.85]},
+      {"id": "tennis_pink", "name": {"en": "Pink tennis", "zh": "粉网球"}, "model": "models/props/ball_2.glb", "tint": [0.83, 0.2, 0.47]},
+      {"id": "tennis_green", "name": {"en": "Green tennis", "zh": "绿网球"}, "model": "models/props/ball_3.glb", "tint": [0.76, 0.81, 0.07]}
+    ]
+  },
+  "sounds": {
+    "bounce": {"files": ["sounds/bounce.wav"], "min_gap": 0.06},
+    "grab": {"files": ["sounds/grab.wav"], "min_gap": 0.08},
+    "charge": {"files": ["sounds/charge.wav"]}
+  },
+  "tuning": {}
+}

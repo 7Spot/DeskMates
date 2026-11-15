@@ -1,0 +1,15 @@
+.venv/
+.venv.nosync/
+.venv*/
+__pycache__/
+*.pyc
+.DS_Store
+models/
+build/
+dist/
+build.nosync/
+dist.nosync/
+packaging/*.icns
+packaging/*.iconset/
+# 本机才有的工具、资料（打包着色器用的 qsb 工具在 archive/qsb-tool/，见 tools/build_shaders.sh）
+archive/

@@ -1,0 +1,26 @@
+{
+  "id": "bone",
+  "kind": "prop",
+  "name": {"en": "Bone", "zh": "骨头"},
+  "mass_kg": 0.12,
+  "thing": {
+    "group": "toys",
+    "order": 20,
+    "role": "fetch",
+    "carry": "bone",
+    "radius": 0.03,
+    "scale": 1.0,
+    "yaw": 0,
+    "shadow": false,
+    "styles": [
+      {"id": "yellow", "name": {"en": "Yellow bone", "zh": "黄骨头"}, "model": "models/props/bone_1.glb", "tint": [0.98, 0.85, 0.3]},
+      {"id": "pink", "name": {"en": "Pink bone", "zh": "粉骨头"}, "model": "models/props/bone_2.glb", "tint": [0.8, 0.33, 0.5]}
+    ]
+  },
+  "sounds": {
+    "bounce": {"files": ["sounds/bounce.wav"], "min_gap": 0.06},
+    "grab": {"files": ["sounds/grab.wav"], "min_gap": 0.08},
+    "charge": {"files": ["sounds/bounce.wav"], "volume": "bounce"}
+  },
+  "tuning": {"e_floor": 0.25, "e_wall": 0.3, "roll": 0.2}
+}

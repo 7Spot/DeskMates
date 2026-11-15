@@ -1,0 +1,40 @@
+{
+  "id": "border_collie",
+  "kind": "pet",
+  "species": "dog",
+  "icon": "bone",
+  "name": {"en": "Border Collie", "zh": "边牧"},
+  "default_name": "Milo",
+  "model": "models/collie.glb",
+  "coat_dir": "models/texture",
+  "coats": ["Cartoon_BorderCollie_Albedo1.png", "Cartoon_BorderCollie_Albedo2.png", "Cartoon_BorderCollie_Albedo3.png", "Cartoon_BorderCollie_Albedo4.png"],
+  "coat_notes": [
+    {"name": {"en": "Black", "zh": "黑白"}, "pattern": {"en": "Narrow blaze · amber eyes", "zh": "窄白脸 · 琥珀眼"}},
+    {"name": {"en": "Red", "zh": "棕白"}, "pattern": {"en": "Wide white face · blue eyes", "zh": "大白脸 · 蓝眼"}},
+    {"name": {"en": "Grey", "zh": "灰白"}, "pattern": {"en": "Grey patches · blue eyes", "zh": "灰斑 · 蓝眼"}},
+    {"name": {"en": "Odd-eyed", "zh": "鸳鸯眼"}, "pattern": {"en": "White collar · odd eyes", "zh": "白围脖 · 鸳鸯眼"}}
+  ],
+  "custom_coat": true,
+  "thumb": "thumb.png",
+  "height_m": 0.8,
+  "fit_m": 0.86,
+  "mass_kg": 18,
+  "gaits": {"walk": 0.65, "trot": 1.96, "run": 3.2, "fast": 4.5, "back": 0.65},
+  "clips": {},
+  "bones": {},
+  "sounds": {
+    "bark": {"files": ["sounds/bark-1.wav", "sounds/bark-2.wav", "sounds/bark-3.wav"]},
+    "lick": {"files": ["sounds/lick-a.wav", "sounds/lick-b.wav", "sounds/lick-c.wav"]},
+    "eat": {"files": ["sounds/eat-loop.wav"]},
+    "bite": {"files": ["sounds/bite-1.wav", "sounds/bite-2.wav", "sounds/bite-3.wav", "sounds/bite-4.wav"], "volume": "eat"},
+    "drop": {"files": ["sounds/drop.wav"], "min_gap": 0.08}
+  },
+  "clip_sounds": {
+    "Bark": {"sound": "bark", "at": [0.495, 1.085, 1.625, 3.075, 3.705]},
+    "Eat_loop": {"sound": "eat", "hold": true, "fade_in": 0.4, "fade_out": 0.5},
+    "EatDrink_end": {"sound": "bite", "at": [0.2]},
+    "Drink_loop": {"sound": "lick", "every": 1.2, "fade_in": 0.08}
+  },
+  "action_sounds": {},
+  "tuning": {}
+}

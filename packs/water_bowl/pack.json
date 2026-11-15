@@ -1,0 +1,22 @@
+{
+  "id": "water_bowl",
+  "kind": "prop",
+  "name": {"en": "Water bowl", "zh": "水盆"},
+  "mass_kg": 0.4,
+  "thing": {
+    "group": "food",
+    "order": 20,
+    "role": "bowl",
+    "serves": "water",
+    "front_rim": {"r": 0.1, "y": 0.07},
+    "scale": 1.0,
+    "yaw": 0,
+    "shadow": true,
+    "physics": {"mass_kg": 0.4, "bounce": 0.3, "friction": 4.0, "squash": 0.06, "recover": 1.0, "dust": 0.0, "shake": 0.0, "sound": "sounds/land.wav", "volume": 0.55},
+    "styles": [
+      {"id": "bowl", "name": {"en": "Water bowl", "zh": "水盆"}, "model": "models/props/bowl_water.glb", "model_empty": "models/props/bowl_water_empty.glb"}
+    ]
+  },
+  "sounds": {},
+  "tuning": {}
+}

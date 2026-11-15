@@ -1,0 +1,20 @@
+{
+  "id": "bridge",
+  "kind": "prop",
+  "name": {"en": "Dog walk", "zh": "独木桥"},
+  "mass_kg": 30.0,
+  "thing": {
+    "group": "park",
+    "order": 40,
+    "role": "decor",
+    "scale": 1.0,
+    "yaw": 90,
+    "shadow": true,
+    "platform": {"y": 1.56, "x0": -0.84, "x1": 0.84, "thick": 0.1},
+    "styles": [
+      {"id": "bridge", "name": {"en": "Dog walk", "zh": "独木桥"}, "model": "models/props/bridge.glb"}
+    ]
+  },
+  "sounds": {},
+  "tuning": {}
+}

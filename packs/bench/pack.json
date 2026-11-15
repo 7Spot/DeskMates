@@ -1,0 +1,20 @@
+{
+  "id": "bench",
+  "kind": "prop",
+  "name": {"en": "Bench", "zh": "长椅"},
+  "mass_kg": 20.0,
+  "thing": {
+    "group": "park",
+    "order": 20,
+    "role": "decor",
+    "scale": 1.0,
+    "yaw": 15,
+    "shadow": true,
+    "platform": {"y": 0.44, "x0": -0.8, "x1": 0.8, "thick": 0.08},
+    "styles": [
+      {"id": "bench", "name": {"en": "Bench", "zh": "长椅"}, "model": "models/props/bench.glb"}
+    ]
+  },
+  "sounds": {},
+  "tuning": {}
+}

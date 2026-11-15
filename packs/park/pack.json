@@ -1,0 +1,23 @@
+{
+  "id": "park",
+  "kind": "prop",
+  "name": {"en": "Park", "zh": "公园"},
+  "mass_kg": 10.0,
+  "thing": {
+    "group": "park",
+    "order": 50,
+    "role": "decor",
+    "scale": 1.0,
+    "yaw": 0,
+    "shadow": true,
+    "styles": [
+      {"id": "a_frame", "name": {"en": "A-frame", "zh": "A 字坡"}, "model": "models/props/a_frame.glb", "yaw": 90},
+      {"id": "poles", "name": {"en": "Posts", "zh": "梅花桩"}, "model": "models/props/poles.glb", "yaw": 90},
+      {"id": "tire", "name": {"en": "Tire jump", "zh": "轮胎圈"}, "model": "models/props/wheel.glb"},
+      {"id": "bin", "name": {"en": "Bin", "zh": "垃圾桶"}, "model": "models/props/bin.glb"},
+      {"id": "fence", "name": {"en": "Wire fence", "zh": "铁丝网"}, "model": "models/props/fence.glb"}
+    ]
+  },
+  "sounds": {},
+  "tuning": {}
+}

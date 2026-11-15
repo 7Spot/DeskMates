@@ -1,0 +1,21 @@
+{
+  "id": "barrier",
+  "kind": "prop",
+  "name": {"en": "Hurdle", "zh": "栏"},
+  "mass_kg": 6.0,
+  "thing": {
+    "group": "park",
+    "order": 10,
+    "role": "hurdle",
+    "scale": 1.0,
+    "yaw": 70,
+    "shadow": true,
+    "styles": [
+      {"id": "low", "name": {"en": "Low hurdle", "zh": "矮栏"}, "model": "models/props/barrier_1.glb", "hurdle": {"h": 0.56}},
+      {"id": "mid", "name": {"en": "Mid hurdle", "zh": "中栏"}, "model": "models/props/barrier_2.glb"},
+      {"id": "high", "name": {"en": "High hurdle", "zh": "高栏"}, "model": "models/props/barrier_3.glb"}
+    ]
+  },
+  "sounds": {},
+  "tuning": {}
+}
