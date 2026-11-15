@@ -25,6 +25,16 @@ HAS_SAMOYED = (config.ROOT / "models" / "samoyed.glb").is_file()
 
 
 class PackFileTests(unittest.TestCase):
+    def test_every_toy_charges_with_the_same_sound(self):
+        """捡球的圈充能：三个玩具（球、骨头、大球）的 charge 是同一段（文件逐字节一样），音量都是自己的 vol_charge，不借碰撞声的。"""
+        found = packs.discover()
+        ball = found[packs.BALL].sounds["charge"]
+        for pid in ("ball", "bone", "big_ball"):
+            spec = found[pid].sounds["charge"]
+            self.assertEqual([f.name for f in spec.files], ["charge.wav"], pid)
+            self.assertEqual(spec.files[0].read_bytes(), ball.files[0].read_bytes(), f"{pid} 和球的是同一段")
+            self.assertEqual(spec.volume, "", f"{pid} 的音量跟 vol_charge")
+
     def test_the_two_shipped_packs_can_be_read(self):
         found = packs.discover()
         self.assertEqual(found[packs.DEFAULT_PET].kind, "pet")

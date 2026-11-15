@@ -11,7 +11,7 @@
 狗和卡片在所有普通桌面（Spaces）都看得见（默认、不可关，native.set_all_spaces）；Settings「小组件全局显示」开着时程序切成 accessory（没有 Dock 图标），
 狗连全屏 App 上也显示；策略在建窗口前设好（窗口创建时就定了能不能进全屏空间），开关一改就重启；菜单栏骨头不在时不切，Cmd+Q 自己接。
 点 Dock 图标只当场校验身份、不弹设置（on_app_state）。
-小组件在屏幕右半边狗朝左、左半边朝右：换了半边（拖过中线、拔掉外接屏后被系统挪过去）狗就转过去，趴着坐着睡着也起来转。
+灵动交互关着时小组件在所有屏合起来那块的右半边狗朝左、左半边朝右：换了半边（拖过中线、拔掉外接屏后被系统挪过去）狗就转过去，趴着坐着睡着也起来转。
 随机动作是黑箱：池固定在 clips.ACTIONS 的 default，用户不能选。
 缩放：触控板双指捏合、滚轮、键盘 + / -，围绕狗的浮点中心。倍数、位置、开关、毛色都记在 QSettings 里，下次启动沿用；
 位置记的是在哪块屏、屏上的比例（别记绝对坐标：宽屏左半边的位置到了笔记本上落在右半边）。启动时淡入。
@@ -102,6 +102,7 @@ FLIP_HOLD_S, FLIP_HOLD_SWAPS, FLIP_HOLD_MAX_S = 0.15, 3, 0.6   # 主窗口换屏
 PARK_MARGIN_M = 0.15   # 狗的身子离开主窗口那块屏再远这么多（米），主窗口才歇着
 PARK_SWAPS = 2         # 歇下来之前再画这么多帧空的
 BALL_MENU_GAP = 6      # 右键球的小胶囊离球多远（1 倍大小时的逻辑像素）
+EDGE_SHARE = 0.25      # 所有屏合起来那块左右各这么宽算靠边：灵动交互里在这歇下来朝中间（_edge_yaw）
 
 
 def _rect(g) -> tuple[int, int, int, int]:
@@ -915,8 +916,26 @@ class CompanionWindow(InputMixin, QWidget):
         if self.dynamic_setting:
             self._apply_modes(self.follow_cursor, self.dynamic_setting, keep_zoom=not self.closeup.zoomed)
 
+    def _screens_span(self) -> tuple[float, float]:
+        """所有屏合起来那块的左右两头（全局 x）：歇着朝哪按它的中线（_home_yaw）、靠边按它两头的四分之一（_edge_yaw）。"""
+        rects = [s.geometry() for s in QApplication.screens()]
+        if not rects:
+            return 0.0, 1.0
+        return float(min(r.x() for r in rects)), float(max(r.x() + r.width() for r in rects))
+
+    def _edge_yaw(self) -> Optional[float]:
+        """灵动交互里歇下来（坐下、趴下、走进平的窝）朝哪：狗在所有屏合起来那块左右各 EDGE_SHARE 宽里就朝中间
+        （左边朝右 330°、右边朝左 210°）；在中间那一半返回 None，照旧（站着时身子跟鼠标转到哪就朝哪歇）。"""
+        left, right = self._screens_span()
+        x, edge = self.dog_root()[0], (right - left) * EDGE_SHARE
+        if x < left + edge:
+            return 330.0
+        if x > right - edge:
+            return 210.0
+        return None
+
     def _home_yaw(self) -> float:
-        """互动模式里歇着时朝哪边：小组件在屏幕右半边朝左（210°），左半边朝右（330°）。分界线是屏幕竖直中线。"""
+        """互动模式里歇着时朝哪边：小组件在所有屏合起来那块的右半边朝左（210°），左半边朝右（330°）。分界线是那块的竖直中线（_screens_span）。"""
         if self.dynamic:                                 # 灵动交互：看鼠标在哪边，不看在屏幕哪半边
             playground = getattr(self, "playground", None)   # 建窗口的时候还没有
             live = playground is not None and playground.active
@@ -925,10 +944,8 @@ class CompanionWindow(InputMixin, QWidget):
                 return QUARTER_POSES[1] if self.dog.facing_right() else QUARTER_POSES[0]   # 鼠标停着一阵了：朝哪就待着朝哪，不转回去对着鼠标
             x = point[0] if point is not None else QCursor.pos().x()   # 头看着球的时候朝球那边，不看了再按鼠标
             return 210.0 if x < self.dog_root()[0] else 330.0
-        rx, ry = self.dog_root()                         # 按狗本身（窗口可能比狗大：看细节放大着）
-        screen = QApplication.screenAt(QPoint(round(rx), round(ry) - 4)) or QApplication.screenAt(self.frameGeometry().center()) \
-            or QApplication.primaryScreen()
-        return 210.0 if rx > screen.geometry().center().x() else 330.0
+        left, right = self._screens_span()
+        return 210.0 if self.dog_root()[0] > (left + right) / 2.0 else 330.0   # 按狗本身（窗口可能比狗大：看细节放大着）
 
     # ---------- 外观 ----------
     def _wants_dark(self) -> bool:

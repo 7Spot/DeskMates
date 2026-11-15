@@ -21,7 +21,7 @@
   "sounds": {
     "bounce": {"files": ["sounds/bounce.wav"], "min_gap": 0.06},
     "grab": {"files": ["sounds/grab.wav"], "min_gap": 0.08},
-    "charge": {"files": ["sounds/bounce.wav"], "volume": "bounce"}
+    "charge": {"files": ["sounds/charge.wav"]}
   },
   "tuning": {"e_floor": 0.7, "e_wall": 0.75, "roll": 1.5}
 }

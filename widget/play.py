@@ -1,7 +1,7 @@
 """狗的行为（set_play 启动时进一次）：DogController 的 mixin（class DogController(PlayMixin)），控制器本体在 widget/dogctl.py。
 狗按姿势和随机动作过日子，鼠标跟随 / 灵动交互 / 表盘动作都在这里：
-- 进入：朝向不是 home（小组件在屏幕右半边朝左、左半边朝右）就转过去（_face_home）；再进该待的形态。
-- 换边（拖过中线、被系统挪到另一半屏）一律转身：站着直接转；趴着、坐着起身、转、回原姿势；睡着的醒来、起身、转、
+- 进入：朝向不是 home（window._home_yaw）就转过去（_face_home）；再进该待的形态。
+- 换边（拖过所有屏合起来那块的中线、被系统挪到另一半）一律转身：站着直接转；趴着、坐着起身、转、回原姿势；睡着的醒来、起身、转、
   用同一种睡法睡回去。"不为转向起立"只管开关来回切和鼠标跟随（头带身体：趴着坐着睡着只转头）。
 - 灵动交互（set_dynamic）：开着一直站着（不坐不趴），只做站着的随机动作；关掉回到用户选的姿势
   （set_rest_posture：灵动交互关着时立刻生效、一直待着，开着时只记下）。例外（活跃度低的狗，widget/temper.py）：没人理一阵子
@@ -326,14 +326,20 @@ class PlayMixin:
         灵动交互里自己歇着的（lounge，活跃度低的狗）是歇成的那个姿势。"""
         return (self.lounge or "standing") if self.dynamic else self.rest_posture
 
-    def set_lounge(self, posture: Optional[str]) -> None:
+    def set_lounge(self, posture: Optional[str], face: Optional[float] = None) -> None:
         """灵动交互里自己歇成什么：None（站着）/ "sitting" / "lying"。和现在的一样什么都不做；变了就换过去（正在做的一刀切）。
+        face：歇下来朝哪（playground 给靠边的狗，window._edge_yaw）：先转过去再坐、趴（_face_home）；None 就朝着现在这边歇。
         被 roam 牵着时只记下：roam 接管时自己会让它站起来（puppet_stand），交回来是站着的。站在转台上也只记下：姿势听转台的，下来再回去。"""
         if posture == self.lounge:
             return
         self.lounge = posture
+        turn = face is not None and posture is not None
+        if turn:
+            self.home_yaw = face
         if self.play and self.dynamic and not self.puppet and not self.on_turntable:
             self._go_posture(self._home_posture())
+            if turn:
+                self._face_home()
 
     def set_dynamic(self, on: bool) -> None:
         """灵动交互：打开就站起来、一直站着；关掉回到用户选的姿势。站在转台上只记下，下来再回去。"""
@@ -374,7 +380,7 @@ class PlayMixin:
                 self._face_home(interrupt=True)
 
     def set_home_yaw(self, yaw: float) -> None:
-        """小组件在屏幕右半边朝左、左半边朝右；换了半边（拖过中线、被系统挪过去）窗口调它，没换边什么都不做（鼠标跟随转过去的身子不被拽回来）。
+        """灵动交互关着时小组件在所有屏合起来那块的右半边朝左、左半边朝右（window._home_yaw）；换了半边（拖过中线、被系统挪过去）窗口调它，没换边什么都不做（鼠标跟随转过去的身子不被拽回来）。
         一律转：站着直接转；趴着、坐着先起身、转、再回原姿势；睡着的醒来、起身、转、再用同一种睡法睡回去（_face_home）。
         被 roam 牵着、站在转台上（看细节）的时候只记下：roam 做完自己转到 home；转台下来时 window.closeup 再叫一次。
         灵动交互里自己歇着（lounge）的时候也只记下：坐着趴着只转头，不为鼠标换了边起立转身再趴回去（窗口每次停稳都会来问一次）。"""

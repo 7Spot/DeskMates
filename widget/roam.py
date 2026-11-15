@@ -433,7 +433,7 @@ class Roam:
             self.leg = {"kind": "stand"}
 
     def finish(self) -> None:
-        """做完：交回控制器，0.3 秒转回现在这个位置该朝的方向（屏幕右半边朝左前方、左半边朝右前方）。"""
+        """做完：交回控制器，0.3 秒转回现在这个位置该朝的方向（host.home_yaw_here）。"""
         task = self.task
         self.task, self.route, self.leg, self.phase = None, [], None, ""
         self.v = 0.0

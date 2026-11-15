@@ -332,6 +332,25 @@ class GoingHomeTests(NestCase):
         self.assertAlmostEqual(dog.perch, spot.perch_m, places=6)
         self.assertTrue(self.things.front_shown(BED))
 
+    def test_a_bed_near_the_right_edge_means_lying_toward_the_middle(self):
+        """窝在右边四分之一里（离屏这块屏 600 以外）、鼠标也在右边：往右走过去，到了转过来朝左趴（window._edge_yaw），不朝着鼠标那边。"""
+        from tests.test_rest_facing import Pointer
+        import widget.window as window_mod
+        dog, pg = self.win.dog, self.pg
+        self.cursor = (self.ag.right() - 4.0, self.floor_y - 60.0)
+        p = mock.patch.object(window_mod, "QCursor", Pointer(self))
+        p.start()
+        self.addCleanup(p.stop)
+        self.start_on_floor(x=400.0)
+        self.step(0.3)
+        t = self.put(BED)
+        spot = self.move_to(t, self.ag.x() + 0.85 * self.ag.width())
+        self.assertGreater(spot.x, self.ag.x() + 0.75 * self.ag.width())
+        pg._idle_for = self.AFTER
+        self.assertIsNotNone(self.step(20.0, self.nested), "走回窝、趴好了")
+        self.step(0.5)
+        self.assertLess(abs((dog.yaw - 210.0 + 180.0) % 360.0 - 180.0), 1.0, "朝左：朝着中间趴")
+
 
 class PutDownTests(NestCase):
     """摆下去马上有反应：窝刚从「物件」页摆出来落定、刚被你拖完松手落定，

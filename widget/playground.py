@@ -103,7 +103,7 @@ DOG_THROW_MIN_M = 0.8       # 松手时手比这快（米 / 秒）才算把狗�
 HAND_WINDOW = 0.05          # 拎着的时候手的速度按最后这么久算（秒）
 BOUNCE_MIN_M = 0.7          # 球撞上去比这快（米 / 秒）才响（滚、贴地跳的最后几下不响）
 BOUNCE_FULL_M = 8.0         # 比这快就是最响
-CHARGE_FULL_AT = 1.0        # 充能的声音（球的包里的 charge：倒放的吉他扫弦，1.06 秒）放到第几秒是「满」：圈满那一下对着它
+CHARGE_FULL_AT = 1.0        # 充能的声音（玩具包里的 charge：木鱼越敲越密，1.30 秒）放到第几秒是「满」（最后一下）：圈满那一下对着它
 CHARGE_LATE_S = 0.03        # 声音从叫它放到真出声晚这么多（NSSound 起播约 0.025 秒，把音量设成 0 量的）：开始的位置往前赶这么多
 PERCH_S = 0.12              # 歇进窝、起来：根抬到垫子上 / 落回去缓这么久
 CURL_MARGIN_M = 0.03        # 歇在狗窝里：尾巴尖离窝的内沿至少留这么多（米）
@@ -354,11 +354,12 @@ class Playground:
 
     def home_yaw_here(self) -> Optional[float]:
         """狗现在歇着该朝哪（灵动交互里：头看着球就朝球那边，不然看鼠标在哪边，window._home_yaw）。
-        刚走到狗屋门口的朝那个窝要它朝的那边（头朝外）。"""
+        刚走到狗屋门口的朝那个窝要它朝的那边（头朝外）；走到狗窝、平顶狗屋，靠边的朝所有屏合起来的中间（window._edge_yaw）。"""
         going = self._nest_going
         if going is not None and going.yaw is not None:
             return going.yaw
-        return self.w._home_yaw()
+        edge = self.w._edge_yaw() if going is not None else None
+        return edge if edge is not None else self.w._home_yaw()
 
     def dog_landed(self, speed_m: float) -> None:
         """狗落地、撞到东西：响一声，越快越响。自己走回窝、自己溜达路上的那几跳不出声。"""
@@ -889,7 +890,7 @@ class Playground:
         if not self._can_lounge():                                # 有人在跟它玩：钟归零，该待的姿势回到站着（roam 接管时自己会让它站起来）
             self._idle_for = 0.0
             if self._seated_play():
-                dog.set_lounge("sitting")                         # 默认坐着的狗：拿起球、球在动叫醒它时回到坐着（窝里的就在窝里坐起来）
+                self._rest_as("sitting")                          # 默认坐着的狗：拿起球、球在动叫醒它时回到坐着（窝里的就在窝里坐起来）
             else:
                 self.rouse()
             return
@@ -904,7 +905,20 @@ class Playground:
             return                                                # 正做着随机动作、正换姿势：做完再换（再去窝），不一刀切
         if homing and self._try_nest():
             return
-        dog.set_lounge(want)
+        self._rest_as(want)
+
+    def _rest_as(self, posture: Optional[str]) -> None:
+        """自己歇成 posture（dog.set_lounge）。要坐下、趴下了才问朝哪（_rest_face）。"""
+        if posture != self.dog.lounge:
+            self.dog.set_lounge(posture, None if posture is None else self._rest_face())
+
+    def _rest_face(self) -> Optional[float]:
+        """歇下来朝哪：歇在尖顶狗屋门口的照门朝外（spot.yaw；门朝哪按狗屋在它那块屏的哪半边，和靠边不一定一致）；
+        别的靠边的朝所有屏合起来的中间（window._edge_yaw）；中间那一半 None，照旧。"""
+        spot = self._nest
+        if spot is not None and spot.yaw is not None:
+            return spot.yaw
+        return self.w._edge_yaw()
 
     # ---------- 自己溜达 ----------
     def _reset_wander(self) -> None:
@@ -1130,14 +1144,14 @@ class Playground:
 
     def settle_in(self, spot: NestSpot, posture: str = "lying") -> None:
         """狗到窝了：歇成 posture（直接趴下，不先坐）。根缓到垫子那么高（dog.perch），歇在垫子上的不画影子（影子会画在窝后面的地上），
-        窝的前沿盖到狗前面。歇在狗屋门口的朝哪（spot.yaw）roam 到的时候已经转好了（go_nest、home_yaw_here）。"""
+        窝的前沿盖到狗前面。朝哪 roam 到的时候已经转好了（go_nest、home_yaw_here）：狗屋门口的朝门外（spot.yaw），狗窝、平顶狗屋靠边的朝中间（window._edge_yaw，趴下时再对一次）。"""
         dog = self.dog
         self._nest = spot
         self._perch_to = spot.perch_m
         if spot.perch_m > 0.0:
             dog.hide_shadow = True
         self.things.show_front(spot.key)
-        dog.set_lounge(posture)
+        dog.set_lounge(posture, self._rest_face())
         self._curl_tail(spot)
 
     def _curl_tail(self, spot: NestSpot) -> None:
@@ -1444,7 +1458,7 @@ class Playground:
             roam.cancel(drop_ball=False)
         self._seat_watch = not roam.busy and not roam.lifted
         if self._seat_watch:
-            self.dog.set_lounge("sitting")
+            self._rest_as("sitting")
 
     def _seated_bark(self) -> None:
         """坐着等的狗圈满了：按调参 ready_bark 的概率坐着叫一声——模型里没有坐着叫的片段，就在坐着的姿势上张一下嘴（expr.bark，嘴张多大照 Bark 片段量的）、
@@ -1454,10 +1468,10 @@ class Playground:
             self.bank.play("bark")
 
     def _charge_sound(self, charging: bool, g: Ring, hold_s: float) -> None:
-        """充能的声音（「倒放的吉他扫弦」：六根弦的和弦倒着扫，低音先到、越来越满，第 CHARGE_FULL_AT 秒到满；
-        61 的皮球声越拍越快听久了烦）。不一拍一拍：球在圈里涨到离圈满还剩 CHARGE_FULL_AT 秒以内才开始放，从对得上的位置放（ball_bank.start 的 offset），
-        圈满那一下正好是和弦到满、接狗叫——停多久满（调参 ring_hold_s、性子）都对得上，不到 1 秒的从中间放起。
-        球出了圈、松手、闸关了：很快淡掉（ball_bank.fade，不「咔」一下断）；再进圈照那时的进度接着放。满了不淡：文件满以后只剩 0.06 秒，让它自己收住。
+        """充能的声音（木鱼敲六下，越敲越密、音一下比一下高，最后一下在第 CHARGE_FULL_AT 秒）。一个文件从对得上的位置放，不一下一下地放：
+        球在圈里涨到离圈满还剩 CHARGE_FULL_AT 秒以内才开始放（ball_bank.start 的 offset），圈满那一下正好敲最后一下、接狗叫——
+        停多久满（调参 ring_hold_s、性子）都对得上，不到 1 秒的从中间放起。
+        球出了圈、松手、闸关了：很快淡掉（ball_bank.fade，不「咔」一下断）；再进圈照那时的进度接着放。满了不淡：最后一下的余音（约 0.3 秒）让它自己收住。
         只有你拿着球玩的时候才有，跟「媒体音效」的音量（调参 vol_charge）。charging：球在圈里、正在涨、还没满；hold_s：照现在的调参从空到满要多久。"""
         if not charging:
             if self._charging:

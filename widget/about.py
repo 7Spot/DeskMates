@@ -1,7 +1,7 @@
 """「关于」页（设置主页面左上角圆里的 app 图标点进来）：一张无框的图（widget/about_art.py：猫狗站在水和沙滩交界的地方，
 左边水里鸭子和鱼、右边沙滩上卡皮巴拉和乌龟、天上海鸥）、名字（中文「同桌 DeskMates」，英文只有 DeskMates）、版本（发布版不带构建号，
 updater.version_text）、一句「养些住在你桌面上的小动物」、两个描边小胶囊链接「访问 GitHub 仓库」（这个软件的仓库）和「访问我的网站」
-（个人网站；英文 Visit GitHub Repo / Visit My Site；网址在 config.GITHUB_URL / HOMEPAGE_URL，空着时先占位、点了没反应）。顶部栏没有名字胶囊，只有 ‹ 和 ×（Page.name）。
+（个人网站；英文 Visit GitHub Repo / Visit My Site；网址在 config.GITHUB_URL / HOMEPAGE_URL，空着时先占位、点了没反应）、最底下一行灰字的版权和许可证（COPYRIGHT）。顶部栏没有名字胶囊，只有 ‹ 和 ×（Page.name）。
 
 进来、回去的过渡动画（Hero）：
 - 进：左上角的圆底边先打开一个口；圆里实心的 D、M 先往中间挤窄、往下拉长，越拉越细成两根线，从口里出去（不从圈上穿过去），线全出去了口再合上、
@@ -34,6 +34,7 @@ from widget.widgets import MotionButton, draw_icon
 INTRO = "Keep a few little animals that live on your desktop"    # 说明文字不带句号
 LINKS = (("Visit GitHub Repo", "GITHUB_URL"), ("Visit My Site", "HOMEPAGE_URL"))   # 这个软件的仓库、个人网站；中文在 i18n 表里
 # 两颗要并排放得下（卡片里面 280 宽，英文写 Website 就宽出 7 像素）
+COPYRIGHT = "Copyright © 2026 JUN7 · GPL v3"     # 中英文一样、不翻译；和 README、LICENSE 对上
 
 # ---- 进来那段的节奏（秒，从点下去算；回去是同一个钟往回拨） ----
 T0 = 0.14                         # 两根线开始往下拉
@@ -151,10 +152,15 @@ class AboutPage(QWidget):
         row.addStretch(1)
         lay.addSpacing(12)
         lay.addLayout(row)
+        self.copyright = _Line(COPYRIGHT)
+        self.copyright.setProperty("muted", True)
+        self.copyright.setAlignment(Qt.AlignHCenter)
+        lay.addSpacing(12)
+        lay.addWidget(self.copyright)
 
     @property
     def lines(self) -> tuple:
-        return (self.name, self.version, self.intro, *self.links)
+        return (self.name, self.version, self.intro, *self.links, self.copyright)
 
     @property
     def veiled(self) -> bool:

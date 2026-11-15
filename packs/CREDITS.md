@@ -7,8 +7,8 @@
 | 狗叫 | `border_collie/sounds/bark-*.wav` | [pollyBarking.mp3](https://freesound.org/people/bluemaloney/sounds/147672/) | bluemaloney | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | 舔 | `border_collie/sounds/lick-*.wav` | [Dog Breathing, Licking & Sniffing OWI](https://freesound.org/people/WolfOWI/sounds/588304/) | WolfOWI | [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) |
 | 吃东西 | `border_collie/sounds/eat-loop.wav`、`bite-*.wav` | [Dog licking feet](https://freesound.org/people/janbezouska/sounds/494078/) | janbezouska | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
-| 球碰撞、拿起球、捡球的圈充能（倒放的吉他扫弦）、狗落地 | `ball/sounds/*.wav`、`border_collie/sounds/drop.wav` | 自己合成 | | |
-| 骨头、大球的碰撞和拿起 | `bone/sounds/*.wav`、`big_ball/sounds/*.wav` | 同球那两段 | | |
+| 球碰撞、拿起球、捡球的圈充能（木鱼）、狗落地 | `ball/sounds/*.wav`、`border_collie/sounds/drop.wav` | 自己合成 | | |
+| 骨头、大球的碰撞、拿起和充能 | `bone/sounds/*.wav`、`big_ball/sounds/*.wav` | 同球那三段 | | |
 | 萨摩耶的狗叫 | `samoyed/sounds/bark-*.wav` | 同边牧那几段 | bluemaloney | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | 萨摩耶的舔 | `samoyed/sounds/lick-*.wav` | 同边牧那几段 | WolfOWI | [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) |
 | 萨摩耶吃东西 | `samoyed/sounds/eat-loop.wav`、`bite-*.wav` | 同边牧那几段 | janbezouska | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |

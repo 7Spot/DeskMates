@@ -73,7 +73,7 @@ class PlaygroundTests(unittest.TestCase):
         self.pg._frames_at = -math.inf
 
     def test_the_charge_sound_swells_so_that_it_is_full_just_as_the_ring_is(self):
-        """「倒放的吉他扫弦」：不一拍一拍——离圈满还剩 1 秒以内才开始放，从对得上的位置放，
+        """充能的木鱼：不一拍一拍——离圈满还剩 1 秒以内才开始放，从对得上的位置放，
         圈满那一下正好放到「满」（文件的第 CHARGE_FULL_AT 秒）；停多久满都对得上。满了不淡（让它自己收住、接狗叫）；
         没满就出了圈 / 松手：淡掉；再进圈照那时的进度接着放。"""
         import wave
@@ -129,7 +129,7 @@ class PlaygroundTests(unittest.TestCase):
             self.assertAlmostEqual(events[-1][2], CHARGE_FULL_AT - (1.0 - g.progress) * 1.0 + CHARGE_LATE_S, delta=1e-6, msg="再进圈：照那时的进度接着放")
             self.assertGreater(events[-1][2], 0.4)
         files = pg.ball_bank.pack.sounds["charge"].files
-        self.assertEqual([f.name for f in files], ["charge.wav"], "球的包里是那段吉他扫弦，不是皮球碰撞那一声")
+        self.assertEqual([f.name for f in files], ["charge.wav"], "球的包里是那段木鱼，不是皮球碰撞那一声")
         with wave.open(str(files[0])) as w:
             self.assertGreaterEqual(w.getnframes() / w.getframerate(), CHARGE_FULL_AT, "文件比「满」的那一刻长")
         self.assertEqual(pg.ball_bank.volume("charge"), self.win.ball_tuning["vol_charge"], "音量有自己的调参项")

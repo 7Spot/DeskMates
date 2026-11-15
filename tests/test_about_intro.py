@@ -99,7 +99,7 @@ class AboutTests(PanelCase):
 
     def test_about_page_has_one_line_two_links_and_no_name_chip(self):
         """底下只要一句「养些住在你桌面上的小动物」，再下面两个描边小胶囊链接（这个软件的仓库、网站：「访问 GitHub 仓库」「访问我的网站」，
-        英文 Visit GitHub Repo / Visit My Site），两种语言都并排放得下：不被挤窄、这一页不比主页面宽；顶部栏没有「关于」两个字，只有 ‹ 和 ×。"""
+        英文 Visit GitHub Repo / Visit My Site），两种语言都并排放得下：不被挤窄、这一页不比主页面宽；最底下一行版权；顶部栏没有「关于」两个字，只有 ‹ 和 ×。"""
         from widget import i18n
         self.assertEqual((i18n.ZH["Visit GitHub Repo"], i18n.ZH["Visit My Site"]), ("访问 GitHub 仓库", "访问我的网站"))
         s, bar = self.settings, self.settings._tag
@@ -112,6 +112,10 @@ class AboutTests(PanelCase):
             self.assertGreaterEqual(link.width(), link.sizeHint().width(), f"「{link.text()}」不被挤窄")
             self.assertTrue(page.rect().contains(link.geometry()), f"「{link.text()}」在这一页里面")
         self.assertLessEqual(page.width(), s.main_page.width(), "链接没把这一页撑得比卡片里面宽")
+        self.assertEqual(page.copyright.text(), "Copyright © 2026 JUN7 · GPL v3", "最底下一行版权，中英文一样")
+        self.assertTrue(page.rect().contains(page.copyright.geometry()))
+        self.assertGreater(page.copyright.y(), page.links[0].geometry().bottom(), "在两个链接下面")
+        self.assertIn(page.copyright, page.lines, "进出关于页时跟别的字一起出来")
         self.assertFalse(page.links[0].property("quiet"))
         self.assertFalse(bar.name_shown)
         self.assertEqual(bar._name_vis, 0.0)
