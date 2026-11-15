@@ -25,7 +25,7 @@ def rel(tag, pre=True, dmgs=1, body="", size=100, digest="", published="2026-11-
 
 OLD = [rel("deskmate-dev-0.5.1"), rel("deskmate-dev-0.5.0"), rel("deskmate-dev-0.4.0")]   # 现在仓库里的：格式对不上，跳过
 NEXT = config.BUILD + 1                         # 比现在这个包新一号的测试版（构建号每打一次包加一，不能写死）
-NEXT_TAG, NEXT_LABEL = f"v0.6.0-b{NEXT}", f"0.6.0 ({NEXT})"
+NEXT_TAG, NEXT_LABEL = f"v{config.VERSION}-b{NEXT}", f"{config.VERSION} ({NEXT})"   # 跟着现在的版本号走
 REPO = "example/deskmate"                       # 测试用的假发布仓库，不碰真的
 API = f"https://api.github.com/repos/{REPO}/releases?per_page=100"
 
