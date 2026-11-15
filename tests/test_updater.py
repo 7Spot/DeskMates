@@ -123,8 +123,8 @@ class NotesTests(unittest.TestCase):
 class NoReleaseRepoTests(unittest.TestCase):
     """发布仓库：每个软件一个自己的；没填就不检查更新、不联网。"""
     def test_shipped_config_uses_the_apps_own_release_repo(self):
-        self.assertEqual(config.UPDATE_REPO, "7Spot/Deskmate", "新版本发到这个仓库的 Release")
-        self.assertEqual(updater.api_url(), "https://api.github.com/repos/7Spot/Deskmate/releases?per_page=100")
+        self.assertEqual(config.UPDATE_REPO, "7Spot/DeskMates", "新版本发到这个仓库的 Release")
+        self.assertEqual(updater.api_url(), "https://api.github.com/repos/7Spot/DeskMates/releases?per_page=100")
         self.assertTrue(updater.enabled())
 
     def test_check_does_nothing_without_a_repo(self):

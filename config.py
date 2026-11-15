@@ -23,9 +23,9 @@ BUILD = 77
 DEV_BUILD = True
 # 检查更新去哪个 GitHub 仓库找新版本（"owner/name"，公开仓库；None = 设置里不显示「检查更新」、不联网）。
 # 每个软件一个自己的发布仓库。
-UPDATE_REPO = "7Spot/Deskmate"
-# 「关于」页最底下的两个链接（先占位）：GitHub 仓库、个人网页。填完整网址（https://…）就能点；空着 = 字更淡、点不了
-GITHUB_URL = ""
+UPDATE_REPO = "7Spot/DeskMates"
+# 「关于」页最底下的两个链接：GitHub 仓库、个人网页。填完整网址（https://…）就能点；空着 = 字更淡、点不了
+GITHUB_URL = "https://github.com/7Spot/DeskMates"
 HOMEPAGE_URL = ""
 
 # 动画帧率：跟着窗口所在屏幕的刷新率走（固定 17 毫秒一帧在 85 赫兹的宽屏上一帧停一次刷新、一帧停两次，快速转头时一跛一跛）。
