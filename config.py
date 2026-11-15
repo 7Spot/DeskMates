@@ -17,7 +17,7 @@ BUNDLE_ID = "com.deskmate.companion"
 # 发布线：pre = 测试版（测试版、正式版的更新都收）；stable = 正式版（只收正式版）。打包脚本 --stable 时改成 stable，打完退回。
 CHANNEL = "pre"
 VERSION = "0.6.0"
-BUILD = 75
+BUILD = 76
 # 开发版：True = 高级设置最底下「版本 0.6.0 (66)」带构建号（直接跑源码、平时 zsh tools/build_app.sh 打的包）；
 # 发布用的包（--release、--stable）打包时改成 False：版本号旁边不显示构建号，只在开发者设置页（连点五下版本号）最底下有。别手改，打完脚本改回 True。
 DEV_BUILD = True
