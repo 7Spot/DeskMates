@@ -7,7 +7,7 @@ import unittest
 from unittest import mock
 
 from tests.room_base import COLLIE, DT, SAMOYED, RoomCase
-from widget import clips, packs, roam, temper
+from widget import clips, excite, packs, roam, temper
 from widget.tuning import PET_PARAMS, Tuning
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -897,12 +897,12 @@ class SamoyedMomentsTests(RoomCase):
         self.assertAlmostEqual(e.wag, 0.3, places=6, msg="轻轻摇")
         self.assertEqual((e.eyes, e.tilt), (0.0, 0.0))
         self.step(2.5)
-        self.assertEqual(e.wag, 0.0, "摇 2.5 秒")
+        self.assertEqual(e.wag, excite.wag(self.win.dog.excite.value), "摇 2.5 秒：只剩兴奋度那一点（鼠标在它旁边）")
         self.cursor = self.far()
         self.step(5.0)
         self.cursor = self.beside()
         self.step(0.5)
-        self.assertEqual(e.wag, 0.0, "20 秒内再来一次：不重演")
+        self.assertEqual(e.wag, excite.wag(self.win.dog.excite.value), "20 秒内再来一次：不重演（只剩兴奋度那一点）")
         self.cursor = self.far()
         self.step(13.0)
         self.cursor = self.beside()
@@ -951,7 +951,7 @@ class SamoyedMomentsTests(RoomCase):
         self.step(1.0, watch, win=collie)
         self.cursor = (roam_.wx + 0.5 * collie.ppm, roam_.wy - 0.4 * collie.ppm)   # 鼠标靠近
         self.step(1.0, watch, win=collie)
-        self.assertEqual(e.wag, 0.0, "边牧：鼠标靠近尾巴不摇")
+        self.assertEqual(e.wag, excite.wag(collie.dog.excite.value), "边牧：靠近只有兴奋度那一点（两只都有），不打招呼")
         for name in ("put", "fooled", "stumped", "daze"):
             pg._cue(name)
         self.step(0.5, watch, win=collie)

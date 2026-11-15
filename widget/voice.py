@@ -92,8 +92,11 @@ class ClipSounds:
             self._held = None
 
     def update(self, clip: Optional[str], t: float, action: Optional[str], dt: float) -> None:
-        """clip：正在播的片段；t：片段播到第几秒；action：正在做的动作 id（没有 None）。"""
-        spec = self.pack.clip_sounds.get(clip) if clip is not None else None
+        """clip：正在播的片段；t：片段播到第几秒；action：正在做的动作 id（没有 None）。
+        包里写「动作:片段」的只在做这个动作时算（犬吠 bow_bark 借伏地伸展的片段叫，别的时候播这几段不响），先找它，再找只写片段的。"""
+        spec = None
+        if clip is not None:
+            spec = (self.pack.clip_sounds.get(f"{action}:{clip}") if action is not None else None) or self.pack.clip_sounds.get(clip)
         if clip != self._clip:
             self._stop_held()
             self._clip = clip

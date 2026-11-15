@@ -25,6 +25,7 @@ from typing import Optional
 
 from widget import temper
 from widget.anim import Player, axis_angle, qmul
+from widget.excite import Excite
 from widget.expression import Expression, ExpressionRig, merge as merge_offsets
 from widget.clips import FADE_CLIP, FADE_STATE, LOOKS_AROUND, POSTURE_PLANS, QUARTER_POSES, RARE, SLEEP_PLANS, TURN_180, TURN_90, Jump, Plan, jumps_for
 from widget.gaze import Gaze
@@ -104,6 +105,7 @@ class DogController(PlayMixin, LocomotionMixin):
         self._clip_tops: dict[str, float] = table(model, "clip_tops")   # 片段 → 最高点：记在模型上，同一个模型的控制器共用（gltf.Model.measured）
         self.required = 0.75                  # 当前要画到地面以上多高（米），窗口按它长高缩回
         self.props = Props(model)             # 盆 / 骨头 / 球：按正在播的片段出现（widget/props.py）
+        self.excite = Excite()                # 此刻有多兴奋（widget/excite.py：窗口每帧按状态推，尾巴跟着它）
         self.expr = Expression()              # 程序叠的小表情：眯眼、耳朵、摇尾巴、歪头、压低、duang（widget/expression.py；灵动交互在用）
         self.expr_rig = ExpressionRig(model)
         self.lift = Lift(model)               # 被拎起来：肚子提起来、四腿垂着（widget/lift.py；灵动交互在用）

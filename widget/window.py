@@ -41,7 +41,7 @@ from PySide6.QtGui import QCursor, QGuiApplication, QImage, QPainter
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QVBoxLayout, QWidget
 
 import config
-from widget import i18n, native, overlay, packs, sounds, sticker, temper, uninstall as uninstall_service, updater
+from widget import excite, i18n, native, overlay, packs, sounds, sticker, temper, uninstall as uninstall_service, updater
 from widget.capture_ui import CaptureUI, ui_frozen
 from widget.clips import POSTURE_PLANS, QUARTER_POSES
 from widget.coat import CoatSpec
@@ -64,7 +64,7 @@ from widget.prefs import PLAY_OPTIONS, Pet, Prefs, Roster, share_size
 from widget.things import BALL_KEY, page_styles
 from widget.render import ELEVATION, make_frame
 from widget.closeup import Closeup
-from widget.tuning import Tuning
+from widget.tuning import LOOK_IDLE_S, Tuning
 from widget.voice import ClipSounds, SoundBank
 from widget.widgets import NAME_MAX, FrameClock, clip_graphemes, hide_tip, sticker_hud
 
@@ -282,6 +282,9 @@ class CompanionWindow(InputMixin, QWidget):
         self._anim_timer.timeout.connect(self._frame)
         self._rate_screen = None                         # 现在听着哪块屏的刷新率变化
         self._lively_at = time.perf_counter()            # 最后一次有动静是什么时候（_pace）
+        self._feel_cursor: Optional[tuple[float, float]] = None   # 兴奋度：上一帧鼠标在哪（_pointer_near）
+        self._feel_still = 0.0                           # …鼠标停着多久了
+        self._feel_away = 0.0                            # …鼠标多久没在狗身边动了：够 excite.GREET_AFTER_S 再过来算打招呼
         self._paced_geo = None                           # 上一帧窗口在哪、多大：变了算有动静
         self._frame_clients: set = set()         # 跟着狗的每一帧一起动的卡片、菜单、提示（widgets.FrameClock）：全程序一个节拍，不和狗打架
         self._sync_frame_rate()
@@ -2352,6 +2355,7 @@ class CompanionWindow(InputMixin, QWidget):
         if self.hover.tick(dt, now, self._flinging()):   # 拎着、飞着不出「···」
             self._dirty = True
         self._dirty = False
+        self._feel(dt)                              # 兴奋度：按这一刻的状态推一帧，尾巴跟着它（招牌时刻在 playground 里叠在上面）
         if self.playground.active:
             self.playground.update(dt, hold=self.showing_scaled)   # 球、狗在空间里跑跳（roam）、表情；看细节放大着 roam 不走
         self.dog.set_look_target(self._look_target(dt))
@@ -2386,6 +2390,45 @@ class CompanionWindow(InputMixin, QWidget):
         self._sync_bubble(dt)
         self._pace(now)
 
+    def _feel(self, dt: float) -> None:
+        """兴奋度（widget/excite.py）：按狗这一刻在干什么推一帧，尾巴摇多欢照它。灵动交互开着、关着都走；
+        开着时球、跑的那几项由 playground.excite_scene 填。"""
+        dog = self.dog
+        near = self._pointer_near(dt)
+        pg = self.playground
+        scene = pg.excite_scene(near) if pg.active else excite.Scene(posture=dog.posture, near_you=near)
+        dog.excite.step(dt, excite.target(scene))
+        dog.expr.wag = excite.wag(dog.excite.value)
+
+    def _pointer_near(self, dt: float) -> bool:
+        """鼠标在狗身边动：离身子正中 temper.GREET_NEAR_DOGS 个身高以内，停着不到调参 look_idle_s 秒。
+        离开（或停着）够 excite.GREET_AFTER_S 以后再过来算打招呼：兴奋度加 KICK_GREET，耳朵一抖、身子轻轻弹一下（睡着、被拎着的不算）。"""
+        pg = self.playground
+        if pg.active:
+            pos = pg.cursor()
+        else:
+            p = QCursor.pos()
+            pos = (float(p.x()), float(p.y()))
+        moved = pos != self._feel_cursor
+        self._feel_cursor = pos
+        self._feel_still = 0.0 if moved else self._feel_still + dt
+        wx, wy = self.scene_world()
+        h = max(1.0, self.dog.rest_top() * self.ppm)
+        near = math.hypot(pos[0] - wx, pos[1] - (wy - 0.5 * h)) <= temper.GREET_NEAR_DOGS * h
+        here = near and self._feel_still < self.tuning.get("look_idle_s", LOOK_IDLE_S)
+        held = pg.active and (pg.roam.lifted or pg.roam.task == "fall")
+        if here and self._feel_away >= excite.GREET_AFTER_S and self.dog.posture != "sleeping" and not held:
+            self.dog.excite.kick(excite.KICK_GREET)
+            self.dog.expr.ear_flick(0.3, 0.55)
+            self.dog.expr.bob(0.02, 0.16)
+        self._feel_away = 0.0 if here else self._feel_away + dt
+        return here
+
+    def dog_tapped(self) -> None:
+        """点了狗一下（没拖）：兴奋度加一点（excite.KICK_TAP），尾巴随后多摇一会儿。睡着的不加。"""
+        if self.dog.posture != "sleeping":
+            self.dog.excite.kick(excite.KICK_TAP)
+
     def _overlay_needed(self) -> bool:
         """这一帧有没有要叠在狗上面的东西（_overlay 画的那些）：没有的话上面那层就不重画。"""
         hover = getattr(self, "hover", None)       # 启动第一次定大小时操作栏尚未创建
@@ -2398,7 +2441,7 @@ class CompanionWindow(InputMixin, QWidget):
         roam = self.playground.roam
         if roam.busy:
             doing = f"{roam.task}:{roam.phase or (roam.leg or {}).get('kind', '')}"
-        return f"{dog.posture} · {doing} · {dog.player.name or '-'} · {self.view.fps:.0f} fps"
+        return f"{dog.posture} · {doing} · {dog.player.name or '-'} · excite {dog.excite.value:.2f} · {self.view.fps:.0f} fps"
 
     def _overlay(self, p: QPainter) -> None:
         """画在狗上面的：「···」和姿势条、Show metadata 的元数据行。"""

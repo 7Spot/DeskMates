@@ -69,7 +69,7 @@ from PySide6.QtCore import QPointF, QVariantAnimation
 from PySide6.QtGui import QCursor, QGuiApplication
 
 import config
-from widget import hand, native, sticker, temper
+from widget import excite, hand, native, sticker, temper
 from widget.ball import Squash
 from widget.props import BALL_R
 from widget.render import ELEVATION
@@ -105,7 +105,6 @@ BOUNCE_MIN_M = 0.7          # 球撞上去比这快（米 / 秒）才响（滚�
 BOUNCE_FULL_M = 8.0         # 比这快就是最响
 CHARGE_FULL_AT = 1.0        # 充能的声音（球的包里的 charge：倒放的吉他扫弦，1.06 秒）放到第几秒是「满」：圈满那一下对着它
 CHARGE_LATE_S = 0.03        # 声音从叫它放到真出声晚这么多（NSSound 起播约 0.025 秒，把音量设成 0 量的）：开始的位置往前赶这么多
-HELD_EXCITE, FULL_EXCITE = 0.35, 0.85   # 拿着球时兴奋从这么多涨到这么多（圈从空到满；尾巴 = 0.6 × 兴奋，俯身时另算）；扔出去狗在追也是 FULL_EXCITE
 PERCH_S = 0.12              # 歇进窝、起来：根抬到垫子上 / 落回去缓这么久
 CURL_MARGIN_M = 0.03        # 歇在狗窝里：尾巴尖离窝的内沿至少留这么多（米）
 WANDER_LEASH_M = 1.5        # 自己溜达：离这次闲下来的地方最远这么多（米），不越逛越远
@@ -195,7 +194,6 @@ class Playground:
         self.roam.on_cue = self._cue
         self._hand: deque[tuple[float, float, float]] = deque()   # 拎着狗时手在哪（时间, x, y）
         self.active = False
-        self.excitement = 0.0                 # 兴奋（扔球、球在飞涨，很快落）：尾巴摇多欢
         self._idle_for = 0.0                  # 没人理多久了（秒）：自己歇着按它算（_lounge）
         self._still_for = 0.0                 # 鼠标停着多久了（秒；你在跟它玩也算动）：停够调参 look_idle_s 狗就不看你了（watching_you）
         self._cursor_seen: Optional[tuple[float, float]] = None   # 上次算「鼠标动了」时它在哪
@@ -527,7 +525,6 @@ class Playground:
         self.dog, self.pack, self.tune, self.bank = w.dog, w.pack, w.tuning, w.sound_bank   # 这四样是抄着的：换模型只在这里改
         self.roam.use_dog(self.dog)
         self.mood = temper.Mood()
-        self.excitement = 0.0
         if not self.active:
             return
         self.dog.lift.prepare()
@@ -853,7 +850,7 @@ class Playground:
         e = self.dog.expr
         e.ear_flick(0.3, 0.55)
         e.bob(0.02, 0.16)
-        self.excitement = min(1.0, self.excitement + 0.1)
+        self.dog.excite.kick(excite.KICK_BOUNCE)
 
     def _check_cover(self) -> None:
         """站在窗口上：脚下那一截被别的窗口盖住了（你点了别的窗口）就跳下来。"""
@@ -1340,22 +1337,23 @@ class Playground:
         s = self.roam.support
         return s is None or s.kind != "window" or s.covers(self.roam.wx, LIE_ROOM_M * self.ppm)
 
+    def excite_scene(self, near_you: bool) -> excite.Scene:
+        """这一刻狗在干什么（window._feel 拿去算兴奋度，widget/excite.py）：拿着球给它看、俯身等扔、追球、叼着、吃、溜达；
+        捡球关着的时候球那几项都不算；被拎着、飞着不算。"""
+        roam, b = self.roam, self.ball
+        play = b is not None and self.fetch_on
+        task = roam.task if roam.task != "fetch" or play else None
+        return excite.Scene(posture=self.dog.posture, near_you=near_you, task=task,
+                            ball_shown=self.ring.progress if play and self.ball_held else None,
+                            bowing=play and roam.bowing, carrying=play and self.carried,
+                            held=roam.lifted or roam.task == "fall")
+
     def _express(self, dt: float) -> None:
-        """表情：尾巴按兴奋程度摇。拿着球时随圈涨慢慢摇快，圈满了俯身等着扔时摇得飞快；扔出去狗在追、叼着的时候也高兴
-        （圈没满就扔的狗只看着，不兴奋）。捡球关着不兴奋。憨的狗（性子）再叠上招牌时刻：笑、歪头、打招呼、趴着眼睛放松（temper.express）。"""
+        """表情：尾巴摇多欢窗口已经按兴奋度设好了（window._feel）；这里把别的几样归零，憨的狗（性子）再叠上招牌时刻：
+        笑、歪头、打招呼、趴着眼睛放松（temper.express）。"""
         e = self.dog.expr
-        b = self.ball
-        self.excitement = max(0.0, self.excitement - 0.25 * dt)
         roam = self.roam
-        if b is not None and self.fetch_on:
-            if self.ball_held:
-                self.excitement = max(self.excitement, HELD_EXCITE + (FULL_EXCITE - HELD_EXCITE) * self.ring.progress)
-            elif not b.resting and not self.carried and roam.task == "fetch":
-                self.excitement = max(self.excitement, FULL_EXCITE)
-            elif self.carried:
-                self.excitement = max(self.excitement, 0.6)
         e.eyes = e.tilt = e.lift = e.ears = 0.0
-        e.wag = min(1.0, max(0.6 * self.excitement, 0.95 if roam.bowing else 0.0))
         e.crouch = 0.0
         goof, lazy = temper.goof(self.tune), temper.lazy(self.tune)
         if goof > 0.0 or lazy > 0.0:                              # 招牌时刻叠在最后（边牧两项都是 0：不走）
@@ -1752,7 +1750,7 @@ class Playground:
         if not self.fetch_on:
             return
         if ready:
-            self.excitement = 1.0
+            self.dog.excite.lift_to(1.0)                      # 圈满了扔出去：兴奋一下子到顶
             self.roam.fetch()                                      # 松手那一刻就冲出去，不用等球飞一段
         else:
             self.roam.fetch_off()

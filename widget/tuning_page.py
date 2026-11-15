@@ -19,7 +19,7 @@ from widget.packs import Pack
 from widget.tuning import Param, Tuning
 from widget.widgets import FineSlider, MotionButton, SelectPill
 
-SCROLL_H = 270              # 能滚的那一块多高（顶上的选项多了一两行、最下面加了版本号，整页还要放得进笔记本屏幕）
+SCROLL_H = 250              # 能滚的那一块多高（顶上的选项多了一两行、下面加了实时的兴奋度和版本号，整页还要放得进笔记本屏幕）
 SCROLL_CSS = ("QScrollArea { background: transparent; border: none; } QScrollArea > QWidget > QWidget { background: transparent; }"
               "QScrollBar:vertical { width: 6px; background: transparent; margin: 0; }"
               "QScrollBar::handle:vertical { background: rgba(128,128,128,0.45); border-radius: 3px; min-height: 24px; }"
@@ -186,6 +186,16 @@ class TuningPage(QWidget):
         self._hold.addStretch(1)
         self.scroll.setWidget(holder)
         lay.addWidget(self.scroll)
+        live = QHBoxLayout()                                     # 现在这只狗此刻的兴奋度（widget/excite.py）：只看不调，开着这一页每 0.1 秒刷一次
+        live.setSpacing(6)
+        live.addWidget(QLabel(tr("Excitement right now")), 1)
+        self.live_label = QLabel()
+        self.live_label.setProperty("muted", True)
+        live.addWidget(self.live_label)
+        lay.addLayout(live)
+        self._live = QTimer(self)
+        self._live.setInterval(100)
+        self._live.timeout.connect(self._show_live)
         foot = QHBoxLayout()
         foot.setSpacing(10)
         self.reset_button = MotionButton(tr("Restore defaults"))
@@ -221,6 +231,18 @@ class TuningPage(QWidget):
                 box.setVisible(i == k)
             pill.setChecked(i == k)
         self.scroll.verticalScrollBar().setValue(0)
+
+    def _show_live(self) -> None:
+        self.live_label.setText(f"{self.window.dog.excite.value:.2f}")
+
+    def showEvent(self, event) -> None:
+        self._show_live()
+        self._live.start()
+        super().showEvent(event)
+
+    def hideEvent(self, event) -> None:
+        self._live.stop()
+        super().hideEvent(event)
 
     def on_show(self) -> None:
         for rows in self.rows:

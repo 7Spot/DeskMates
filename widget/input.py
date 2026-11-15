@@ -268,8 +268,10 @@ class InputMixin:
                     hover.hide_now()                          # 扔到另一块屏，「···」还留在旧屏上
                 elif not self._shape and self.rect().contains(local):
                     hover.set_hover(True)                     # 松手时鼠标还在狗上：算悬停，三个点照常出来（拖动中 Qt 可能丢了 Enter；点击范围就是狗时下一帧自己看）
-            elif playground.active:
-                playground.dog_unpress()                      # 点一下：弹回来（duang 的后半），没有别的反应
+            else:
+                if playground.active:
+                    playground.dog_unpress()                  # 点一下：弹回来（duang 的后半）
+                self.dog_tapped()                             # 点一下：兴奋度加一点（window.dog_tapped，睡着的不加）
         self._drag, self._sliding = None, False
 
     def mouseDoubleClickEvent(self, event) -> None:

@@ -269,6 +269,33 @@ class VoiceTests(unittest.TestCase):
                 cs.update("Bark", t, None, DT)
             self.assertEqual(play.call_count, 2, "过了 1.22")
 
+    def test_bow_and_bark_only_barks_as_that_action(self):
+        """犬吠（表盘里点的 bow_bark）借伏地伸展的片段叫：包里写「bow_bark:Idle_5_loop」的只在做这个动作时响；
+        狗自己随机做的伏地伸展（bow）、灵动交互里俯身等扔（没在做动作）播同一段都不响。"""
+        b = self.bank({"bark": packs.SoundSet((Path("a.wav"),))}, {"bow_bark:Idle_5_loop": packs.ClipSound("bark", (1.0,))})
+        for action, want in (("bow_bark", 1), ("bow", 0), (None, 0)):
+            cs = ClipSounds(b)
+            with mock.patch.object(b, "play") as play:
+                t = 0.0
+                cs.update("Idle_5_loop", t, action, DT)
+                while t < 1.25:
+                    t += DT
+                    cs.update("Idle_5_loop", t, action, DT)
+                self.assertEqual(play.call_count, want, f"动作 {action}")
+
+    def test_the_dial_has_bow_and_bark_and_the_dog_alone_still_bows_silently(self):
+        from widget.clips import ACTIONS_BY_ID, DEFAULT_ACTIONS, LIST_ACTIONS
+        listed = [a.id for a in LIST_ACTIONS]
+        self.assertIn("bow_bark", listed)
+        self.assertNotIn("bow", listed, "表盘里没有伏地伸展了")
+        self.assertIn("bow", DEFAULT_ACTIONS, "狗自己还会随机伏地伸展")
+        self.assertNotIn("bow_bark", DEFAULT_ACTIONS, "狗自己不会犬吠：自己待着没声音")
+        self.assertFalse(ACTIONS_BY_ID["bow"].mouth, "伏地伸展压住嘴")
+        self.assertTrue(ACTIONS_BY_ID["bow_bark"].mouth, "犬吠照片段张嘴")
+        for pid in ("border_collie", "samoyed"):
+            pack = packs.discover()[pid]
+            self.assertEqual(set(k for k in pack.clip_sounds if k.startswith("bow_bark:")), {"bow_bark:Idle_5_loop", "bow_bark:Idle_5_end"}, pid)
+
     def test_a_long_sound_stops_when_the_clip_changes(self):
         b = self.bank({"eat": packs.SoundSet((Path("a.wav"),))}, {"Eat_loop": packs.ClipSound("eat", hold=True)})
         cs = ClipSounds(b)
@@ -383,6 +410,7 @@ class SecondModelTests(unittest.TestCase):
         pg = win.playground
         for i in range(int(seconds / DT)):
             pg._frames_at = -math.inf if i % 15 == 0 else pg._frames_at
+            win._feel(DT)                                        # 兴奋度：和窗口每帧一样排在游乐场前面
             pg.update(DT)
             win.dog.set_look_target(win._look_target(DT))
             win.dog.update(DT)
@@ -464,7 +492,7 @@ class SamoyedModelTests(unittest.TestCase):
         """要的片段都是它自己的，没有一段是靠 CLIP_FALLBACK 顶上的；嘴、尾巴、眼睛、爪子的骨头都在。"""
         from widget import clips, coat, roam
         wanted = {packs.IDLE, roam.BACK_CLIP, "Bark", "Pick_up", "Put_down", "Pick_up_idle", *roam.GAIT_CLIPS.values(), *packs.CLIP_FALLBACK, *packs.CLIP_FALLBACK.values(),
-                  *self.pack.clip_sounds}
+                  *(k.split(":")[-1] for k in self.pack.clip_sounds)}         # 「动作:片段」只按片段查（动作那半在 clips.ACTIONS 里）
         for jump in roam.JUMPS.values():
             wanted.update(c for c in (jump.start, jump.air, jump.land) if c)
         for action in clips.ACTIONS:

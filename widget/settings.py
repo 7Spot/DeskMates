@@ -295,7 +295,7 @@ class SettingsPanel(Card):
         follow_row = self.row(tr("Follow cursor"), self.follow, tr("Watches the pointer from afar"))
         self.dynamic = Switch()
         self.dynamic.toggled.connect(lambda on: self._mode_changed(window.set_dynamic, on))
-        dynamic_row = self.row(tr("Dynamic interaction"), self.dynamic, tr("Throw the ball for it · lift the dog and throw it"))
+        dynamic_row = self.row(tr("Dynamic interaction"), self.dynamic, tr("Each little animal has a slightly different personality"))
         self.play_options_btn = FlatIcon("tune")
         self.play_options_btn.setAccessibleName(tr("Interaction options"))
         self.play_options_btn.setVisible(window.dynamic_setting)

@@ -237,6 +237,7 @@ class PlaygroundTests(unittest.TestCase):
         w, pg = self.win, self.pg
         for i in range(int(seconds / DT)):
             pg._frames_at = -math.inf if i % 15 == 0 else pg._frames_at
+            w._feel(DT)                                          # 兴奋度：和窗口每帧一样排在游乐场前面（window._tick）
             pg.update(DT)
             w.dog.set_look_target(w._look_target(DT))
             w.dog.update(DT)

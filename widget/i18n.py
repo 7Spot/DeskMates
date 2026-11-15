@@ -21,7 +21,7 @@ ZH: dict[str, str] = {
     "Follow options": "跟随选项",
     "Turn with the mouse (standing only)": "随鼠标转身（仅站姿生效）",
     "Dynamic interaction": "灵动交互",
-    "Throw the ball for it · lift the dog and throw it": "扔球给它捡 · 拎起来能扔出去",
+    "Each little animal has a slightly different personality": "每只小动物的性格都不太一样",
     "Interaction options": "灵动交互的选项",                     # 灵动交互那一行的调节图标，点开下面几条（prefs.PLAY_OPTIONS）
     "Things": "物件",                                           # 灵动交互选项最下面那一行、页名（widget/things_page.py）
     "Beds & houses": "窝", "Food & water": "吃喝", "Toys": "玩具", "Park": "公园",   # 「物件」页的组名
@@ -57,6 +57,7 @@ ZH: dict[str, str] = {
     "Keep a few little animals that live on your desktop": "养些住在你桌面上的小动物",   # 关于页的一句话
     "Visit GitHub Repo": "访问 GitHub 仓库",                   # 关于页底下的两个链接
     "Visit My Site": "访问我的网站",
+    "Excitement right now": "此刻的兴奋度",                   # 开发者设置页：狗此刻的兴奋度（widget/excite.py）
     # 卸载、检查更新
     "Uninstall widget": "卸载小组件",
     "Uninstall…": "卸载…",
@@ -107,7 +108,7 @@ ZH: dict[str, str] = {
     # 动作卡片（随机池也从这里挑）。同样只写动作不写情绪
     "Actions": "动作",
     "Stretch front": "前伸", "Sniff the ground": "嗅地", "Paw up": "抬前爪", "Scratch": "挠痒", "Howl": "仰头叫",
-    "Look around": "左右观望", "Bow stretch": "伏地伸展", "Dig": "刨土", "Bark": "叫", "Spin": "转圈",
+    "Look around": "左右观望", "Bow stretch": "伏地伸展", "Bow and bark": "犬吠", "Dig": "刨土", "Bark": "叫", "Spin": "转圈",
     "Yawn": "打哈欠", "Side-lie a while": "侧躺一会",
     "Walking": "走路", "Run and jump": "跑跳", "Trotting": "小跑", "Running": "快跑", "Pacing": "踱步", "Backing up": "后退",
     "Turning": "转身", "Hopping": "小跳", "Jumping": "原地跳", "Fetching": "捡回", "Carrying": "叼着",

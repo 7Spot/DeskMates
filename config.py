@@ -26,7 +26,7 @@ DEV_BUILD = True
 UPDATE_REPO = "7Spot/DeskMates"
 # 「关于」页最底下的两个链接：GitHub 仓库、个人网页。填完整网址（https://…）就能点；空着 = 字更淡、点不了
 GITHUB_URL = "https://github.com/7Spot/DeskMates"
-HOMEPAGE_URL = ""
+HOMEPAGE_URL = "https://7spot.github.io"
 
 # 动画帧率：跟着窗口所在屏幕的刷新率走（固定 17 毫秒一帧在 85 赫兹的宽屏上一帧停一次刷新、一帧停两次，快速转头时一跛一跛）。
 # 每 k 次刷新画一帧，k 取让帧率不超过 ANIM_MAX_FPS 的最小整数（120 赫兹 → 60 帧、85 → 85）；读不到刷新率按 ANIM_FPS。

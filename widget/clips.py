@@ -46,7 +46,7 @@ class Action:
     gaze：做这个动作时头还跟不跟鼠标（头有自己的戏的不跟 —— 低头嗅、吃喝、刨土、伏地、抬头、左右看、侧躺、叼 / 捡；
     其余照样看着鼠标）。
     label 是英文名，i18n 表里有中文。default：在随机池里。池是固定的、用户不能选；
-    不在池里的狗不会自己做，只能从动作卡片点（dogctl.do_action）。"""
+    不在池里的狗不会自己做，只能从动作卡片点（dogctl.do_action）。listed：在不在动作卡片（表盘）里。"""
     id: str
     label: str
     posture: str
@@ -59,6 +59,7 @@ class Action:
     gaze: bool = True
     mouth: bool = True     # False：做的时候把嘴和舌头压回不张的姿势（模型的伏地、伏低片段自带叫：伏地伸展不该叫）
     prop: Optional[str] = None   # 这个动作带什么道具（widget/props.py）：bone / ball / food / water；动作开始 begin、做完 finish、被切 cut
+    listed: bool = True    # False：只在随机池里，动作卡片（表盘）里没有
 
 
 # 随机池（default）：站着 前伸 后伸 甩毛 挠痒 抬头 左右观望 伏地伸展 刨土；坐着 甩毛（先站起来）；趴着 打哈欠。其余只在动作卡片里。
@@ -67,7 +68,10 @@ ACTIONS = (
     # 休息
     Action("look_up", "Howl", "standing", ("Idle_6",), group="rest", gaze=False),                                # Idle_6 是仰头张嘴叫（id 不动）
     Action("look_around", "Look around", "standing", ("Crouch_Idle_start", "Crouch_Idle_loop_2", "Crouch_Idle_end"), group="rest", gaze=False, mouth=False),   # 伏低左右看：loop_2 头才转（loop_1 头不动），嘴压住
-    Action("bow", "Bow stretch", "standing", ("Idle_5_start", "Idle_5_loop", "Idle_5_end"), group="rest", gaze=False, mouth=False),   # Idle_5 自带叫，压住嘴
+    Action("bow", "Bow stretch", "standing", ("Idle_5_start", "Idle_5_loop", "Idle_5_end"), group="rest", gaze=False, mouth=False,
+           listed=False),   # Idle_5 自带叫，压住嘴：狗自己随机做的伏地伸展不出声（狗自己待着没声音），表盘里是下面的犬吠
+    Action("bow_bark", "Bow and bark", "standing", ("Idle_5_start", "Idle_5_loop", "Idle_5_end"), group="rest", gaze=False,
+           default=False),  # 犬吠：同一组片段，嘴照片段张，叫声在包里 clip_sounds 的「bow_bark:Idle_5_*」（只有从表盘点的才响）
     Action("yawn", "Yawn", "lying", ("Lie_belly_loop_2",), group="rest", rare="Lie_belly_loop_2"),
     Action("side_lie", "Side-lie a while", "standing", ("Lie_start", "Lie_loop_1", "Lie_loop_2", "Lie_end"), group="rest", default=False, gaze=False),
     # 侧躺算站姿动作：趴着点它照样是 起身 → 侧躺 → 起身 → 趴回去，但中途被切时狗直接从侧躺切到下一个，不用先趴一次再起来
@@ -104,7 +108,7 @@ ACTIONS = (
     Action("sit_shake", "Paw up", "sitting", ("Idle_7",), group="body", via_standing=True, rare="Idle_7"),
 )
 ACTIONS_BY_ID = {a.id: a for a in ACTIONS}
-LIST_ACTIONS = tuple(a for a in ACTIONS if not a.via_standing)   # 动作卡片里的 28 个
+LIST_ACTIONS = tuple(a for a in ACTIONS if not a.via_standing and a.listed)   # 动作卡片里的 28 个
 DEFAULT_ACTIONS = tuple(a.id for a in ACTIONS if a.default)
 
 

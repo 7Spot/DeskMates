@@ -139,7 +139,7 @@ class ArrivingTests(NestCase):
         self.step(0.3)
         roam.leap_spec()
         pg.mood.cue("put", roam.t)
-        pg.excitement = 0.8
+        win.dog.excite.value = 0.8
         pg.pet_leaving()
         pack = dataclasses.replace(self.pack, id="other")
         win.pack, win.dog = pack, DogController(self.model, seed=9)
@@ -153,7 +153,7 @@ class ArrivingTests(NestCase):
         self.assertEqual((pg.dog, pg.pack, pg.tune, pg.bank, roam.dog), (win.dog, pack, win.tuning, win.sound_bank, win.dog))
         self.assertIsNone(roam._spec, "跳法的数按新模型重拿")
         self.assertEqual(roam.leap_spec().push_x, roam_mod.leap_measures(win.dog)[0].push_x)
-        self.assertEqual((pg.excitement, pg.mood.cue("put", roam.t)), (0.0, True), "招牌时刻、兴奋重来")
+        self.assertEqual((win.dog.excite.value, pg.mood.cue("put", roam.t)), (0.0, True), "招牌时刻、兴奋度重来（新狗新的一份）")
         self.assertEqual(roam.facing, 1.0, "朝向照新狗（330° 朝右）")
         self.assertIsNotNone(win.dog.lift.rig, "拎起来的姿势先量好（模型上有就直接拿）")
         self.step(0.5)

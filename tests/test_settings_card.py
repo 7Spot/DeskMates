@@ -1393,12 +1393,12 @@ class SettingsCardTests(PanelCase):
         dial.mouseMoveEvent(mev(QEvent.MouseMove, up))                # 停住再松手：没有甩
         dial.mouseReleaseEvent(mev(QEvent.MouseButtonRelease, up, Qt.NoButton))
         dial.settle_now()                                             # 对齐 + 执行立刻走完（不真等）
-        self.assertEqual(dial.current_id(), "bow", "往上拖两格的表沿长度 = 两格")
-        self.assertEqual(done[-1], "bow")
+        self.assertEqual(dial.current_id(), "bow_bark", "往上拖两格的表沿长度 = 两格")
+        self.assertEqual(done[-1], "bow_bark")
         n = len(done)
         dial.mousePressEvent(mev(QEvent.MouseButtonPress, front))
         dial.mouseReleaseEvent(mev(QEvent.MouseButtonRelease, front, Qt.NoButton))
-        self.assertEqual(done[-1], "bow")
+        self.assertEqual(done[-1], "bow_bark")
         self.assertEqual(len(done), n + 1, "点当前这根：再做一次")
         self.assertTrue(dial._bar.isActive(), "执行后进度条开始刷新")
         a = math.radians(dial.step)                                        # 下面一根（顺时针一格）

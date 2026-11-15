@@ -33,7 +33,7 @@ class ActionPoolTests(unittest.TestCase):
         ids = [a.id for a in LIST_ACTIONS]
         self.assertEqual(len(ids), 28, "加过跳远、高跳又删了")
         self.assertNotIn("long_jump", ids); self.assertNotIn("high_jump", ids)
-        self.assertEqual(ids[:5], ["look_up", "look_around", "bow", "yawn", "side_lie"], "先是休息那组")
+        self.assertEqual(ids[:5], ["look_up", "look_around", "bow_bark", "yawn", "side_lie"], "先是休息那组（伏地伸展的位置是犬吠）")
         for sid in ("walking", "active", "trotting", "running", "pacing", "backing_up", "turning", "hopping", "jumping", "fetching",
                     "carrying", "sniffing", "drinking", "eating", "creeping", "picking_up"):
             self.assertIn(sid, ids)
