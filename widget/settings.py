@@ -22,7 +22,7 @@
 - 开发者设置页（widget/tuning_page.py，连点五下版本号进，‹ 回高级设置）。
 - 「物件」页（widget/things_page.py，从主页面灵动交互选项里的「物件 ›」进，‹ 回主页面）：按组排的格子，点一下摆出来 / 收起来。
 - 卸载确认页（‹ 回高级设置）：没有说明，只有「取消」和红色的「删除」（长按 0.6 秒）；确认后交给独立原生助手：准备成功才退出，App 移入废纸篓后才清理数据。
-- 更新说明页（高级设置或关于页里点「发现新版本」进，‹ 回那一页）：发布日期 · 大小、Release 正文里的「更新内容」、「下次再说」/「更新」（长按）；更新 = 回到那一页开始下载。
+- 更新说明页（高级设置或关于页里点「发现新版本」进，‹ 回那一页）：发布日期 · 大小、Release 正文里的「更新内容」、「下次再说」/「更新」（点一下）；更新 = 回到那一页开始下载；「更新内容」长了在限高的滚动区里滚（NOTES_MAX_H）。
 - 已下载页（点「新版本已下载完成」或顶部栏里的新版本胶囊进，取消回原来那页）：app 名 + 版本、「安装包已下载 · 38 MB」、「删除安装包」（长按）/「取消」/「安装」（长按）。
 所有改动直接调窗口的方法，窗口负责记到 QSettings；sync 每 0.3 秒把控件对齐到窗口的状态。"""
 from __future__ import annotations
@@ -36,7 +36,7 @@ import shiboken6
 from typing import Callable, Optional
 
 from PySide6.QtCore import QEvent, QPoint, QRect, Qt, QTimer
-from PySide6.QtWidgets import QButtonGroup, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QButtonGroup, QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 import config
 from widget import i18n, marks, native, sounds, updater
@@ -72,6 +72,7 @@ SUB_GAP = 6                    # 子选项之间：比主页面的行距（ROW_G
 SIZE_GAP = 4                   # 主页面「大小」那一行和它下面整行宽的滑杆之间
 UI_FEEDBACK_GAP = 0.12         # 调界面音效时两声开关声之间至少隔多久：快了合并成一声（最后那个方向），不连成一串
 MEDIA_FEEDBACK_GAP = 0.5       # 拖媒体音效时最多多久叫一声
+NOTES_MAX_H = 200             # 更新说明页的「更新内容」最多这么高（逻辑像素，约八九行），再多在里面滚：卡片和别的页差不多高
 VERSION_CLICKS, VERSION_CLICK_GAP = 5, 0.6   # 版本号连点几下进开发者设置页、两下之间最多隔多久（秒）
 PILL_CSS = "QPushButton { font-size: 12px; }"        # 语言 / 外观的小胶囊；选中的填色、描边由控件手绘负责
 UPDATE_LINES = {                                  # 「检查更新」这一行右边：(字, 能不能点, 蓝不蓝)；能点的有悬停框
@@ -584,18 +585,27 @@ class SettingsPanel(Card):
         return self._page_column((self._button_row(cancel, self.delete_button), 0))
 
     def _build_notes(self) -> QWidget:
-        """更新说明：发布日期 · 大小，Release 正文里的「更新内容」，「下次再说」/「更新」（长按）。"""
+        """更新说明：发布日期 · 大小，Release 正文里的「更新内容」，「下次再说」/「更新」（点一下就开始下载，不用长按）。
+        「更新内容」一行一个控件排在 notes_box 里，外面套一层限高的滚动区（NOTES_MAX_H）：写得长（整份功能说明）卡片也是平常的高，字在里面滚。"""
         self.notes_meta = QLabel()
         self.notes_meta.setProperty("muted", True)
         self.notes_box = QWidget()
         box = QVBoxLayout(self.notes_box)
         box.setContentsMargins(0, 0, 0, 0)
         box.setSpacing(6)
+        self.notes_scroll = QScrollArea()
+        self.notes_scroll.setWidget(self.notes_box)
+        self.notes_scroll.setWidgetResizable(True)
+        self.notes_scroll.setFrameShape(QFrame.NoFrame)
+        self.notes_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.notes_scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
+        self.notes_scroll.viewport().setAutoFillBackground(False)
+        self.notes_box.setAutoFillBackground(False)
         later = MotionButton(tr("Later"))
-        later.clicked.connect(lambda _=False: self.show_page("advanced"))
-        self.update_now = HoldPill(tr("Update"), "primary", self.theme.accent)
-        self.update_now.held.connect(self._start_download)
-        return self._page_column((self.notes_meta, 0), (self.notes_box, 10), (self._button_row(later, self.update_now), 16))
+        later.clicked.connect(lambda _=False: self.show_page(self._notes_from))
+        self.update_now = HoldPill(tr("Update"), "primary", self.theme.accent, hold=False)
+        self.update_now.clicked.connect(lambda _=False: self._start_download())
+        return self._page_column((self.notes_meta, 0), (self.notes_scroll, 10), (self._button_row(later, self.update_now), 16))
 
     def _build_downloaded(self) -> QWidget:
         """已下载：app 名 + 版本、「安装包已下载 · 38 MB」、「删除安装包」/「取消」/「安装」（删除、安装长按）。"""
@@ -647,6 +657,16 @@ class SettingsPanel(Card):
             label.setTextFormat(Qt.PlainText)
             line.addWidget(label, 1)
             lay.addLayout(line)
+        self._fit_notes()
+
+    def _fit_notes(self) -> None:
+        """滚动区的高：字有多高就多高，最多 NOTES_MAX_H（再多在里面滚）。字折几行要看宽，按这一页的宽量。"""
+        width = self.notes_scroll.width() if self.notes_scroll.width() > 50 else self.main_page.width()
+        lay = self.notes_box.layout()
+        lay.activate()
+        full = lay.totalHeightForWidth(width) if lay.hasHeightForWidth() else lay.sizeHint().height()
+        self.notes_scroll.setFixedHeight(max(1, min(full, NOTES_MAX_H)))
+        self.notes_scroll.verticalScrollBar().setValue(0)
 
     def _fill_downloaded(self) -> None:
         rel = self.window.updater.release
@@ -672,7 +692,7 @@ class SettingsPanel(Card):
             self.window.updater.download()
 
     def _start_download(self) -> None:
-        """更新说明页长按「更新」：回到点进来的那页（高级设置 / 关于页），检查更新那一行显示正在下载。"""
+        """更新说明页点「更新」：回到点进来的那页（高级设置 / 关于页），检查更新那一行显示正在下载。"""
         self.show_page(self._notes_from)
         self.window.updater.download()
 

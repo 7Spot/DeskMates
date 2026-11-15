@@ -782,14 +782,14 @@ DANGER = sticker.DANGER
 
 
 class HoldPill(MotionButton):
-    """要按住 0.6 秒才触发的胶囊按钮（删除、删除安装包、安装、更新）：和别的胶囊同一种样子（同高、同圆角、同字号），只是颜色不同——
+    """要按住 0.6 秒才触发的胶囊按钮（删除、删除安装包、安装）：hold=False 时就是同样子的普通胶囊，点一下发 clicked（更新说明页的「更新」）。和别的胶囊同一种样子（同高、同圆角、同字号），只是颜色不同——
     kind："primary"（强调色实心）/ "danger"（红描边红字）。按住时一圈进度线沿描边走（和退出、重置、关机键一样是一圈），
     满了发 held；点一下没反应。线就压在描边上、从顶上正中顺时针走，离字三像素以上，挡不到字（别画在描边里面：会把「更新」的字挡住）。
     自己画，不用样式表的按下态（按下态会把整个按钮变深）。"""
     MOTION_COLOR = "press"
     held = Signal()
 
-    def __init__(self, text: str, kind: str = "", accent: Optional[str] = None, parent=None):
+    def __init__(self, text: str, kind: str = "", accent: Optional[str] = None, parent=None, hold: bool = True):
         super().__init__(text, parent)
         self.kind = kind
         self.accent = accent
@@ -797,9 +797,10 @@ class HoldPill(MotionButton):
             self.setProperty("kind", kind)
         self.setCursor(Qt.PointingHandCursor)
         self.setFixedHeight(PILL_H + 2 * MOTION_PAD)
-        self.driver = HoldDriver(self)
-        self.driver.changed.connect(self.update)
-        self.driver.held.connect(self.held)
+        self.driver = HoldDriver(self) if hold else None
+        if self.driver is not None:
+            self.driver.changed.connect(self.update)
+            self.driver.held.connect(self.held)
 
     def set_accent(self, color: str) -> None:
         self.accent = color
@@ -825,7 +826,7 @@ class HoldPill(MotionButton):
         p.setBrush(bg)
         p.drawRoundedRect(r, r.height() / 2, r.height() / 2)
         self.motion.draw_text(p, self.text(), fg)
-        if self.driver.progress > 0.0:
+        if self.driver is not None and self.driver.progress > 0.0:
             draw_hold_ring(p, pill_path(r), self.driver.progress,
                            fg if self.motion.press_amount > 0 else hold_ring_color(self.kind, self.accent), 2.5)
 

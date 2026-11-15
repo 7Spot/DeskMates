@@ -316,7 +316,8 @@ class SettingsUpdateTests(PanelCase):
         self.assertIn(NEXT_LABEL, s._title_label.text())
         texts = [w.text() for w in s.notes_box.findChildren(type(s.version_label))]
         self.assertIn("新东西", texts)
-        s.update_now.held.emit()                                     # 长按「更新」
+        self.assertIsNone(s.update_now.driver, "「更新」不用长按")
+        s.update_now.click()                                         # 点一下「更新」
         self.assertEqual(s.page, "advanced", "回到高级设置")
         self.assertEqual(up.state, "downloaded")
         self.assertEqual(s.update_button.text(), "Update ready")
@@ -524,6 +525,40 @@ class SettingsUpdateTests(PanelCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NotesPageHeightTests(PanelCase):
+    """更新说明页：「更新内容」写得长（整份功能说明，45 行）卡片也是平常的高，字在限高的滚动区里滚；短的不滚、有多高就多高。"""
+
+    def open_notes(self, body: str):
+        from widget import settings as settings_mod
+        s, up = self.settings, self.win.updater
+        up._fetch = lambda url: [rel("v99.0.0", pre=False, body=body)]
+        up._spawn = lambda fn: fn()
+        s.show()
+        s.show_advanced(True, animated=False)
+        s.finish_page_anim()
+        s.update_button.click()
+        self.app.processEvents()
+        self.assertEqual(up.state, "found")
+        s.update_button.click()
+        s.finish_page_anim()
+        self.app.processEvents()
+        self.assertEqual(s.page, "notes")
+        return s, settings_mod.NOTES_MAX_H
+
+    def test_long_notes_scroll_inside_a_card_of_normal_height(self):
+        lines = "\n".join(f"- 第 {i} 条：每一条都写得长一点，折成两行也放得下这一页的宽" for i in range(45))
+        s, cap = self.open_notes("**更新内容**\n" + lines)
+        self.assertEqual(s.notes_scroll.height(), cap, "最多这么高")
+        self.assertGreater(s.notes_scroll.verticalScrollBar().maximum(), 0, "多出来的在里面滚")
+        self.assertEqual(s.notes_scroll.verticalScrollBar().value(), 0, "从头看起")
+        self.assertLess(s.notes_page.sizeHint().height(), cap + 140, "整页和别的页差不多高")
+
+    def test_short_notes_do_not_scroll(self):
+        s, cap = self.open_notes("**更新内容**\n- 新东西\n- 修好了")
+        self.assertLess(s.notes_scroll.height(), cap)
+        self.assertEqual(s.notes_scroll.verticalScrollBar().maximum(), 0, "放得下就不滚")
 
 
 class SettingsWithoutReleaseRepoTests(PanelCase):

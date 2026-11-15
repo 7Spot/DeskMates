@@ -165,6 +165,11 @@ class AboutTests(PanelCase):
         self.assertEqual(s.page, "about")
         status.click()
         s.finish_page_anim()
+        next(b for b in s.notes_page.findChildren(type(s.update_now).__mro__[1]) if b.text() == about.tr("Later")).click()
+        s.finish_page_anim()
+        self.assertEqual(s.page, "about", "「下次再说」也回关于页")
+        status.click()
+        s.finish_page_anim()
         with mock.patch.object(up, "download") as download:
             s._start_download()
         s.finish_page_anim()
